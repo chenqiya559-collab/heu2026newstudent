@@ -22,12 +22,12 @@ if (!item) {
     <main class="detail-shell">
       <article class="detail-article">
         <div class="detail-breadcrumb"><a href="./index.html">首页</a><span>/</span><a href="./index.html#guide">新生指南</a><span>/</span><b>${category.name}</b></div>
-        <div class="detail-hero"><span class="cat" style="--c:${category.color}">${category.name}</span><h1>${item.title}</h1><p>${item.summary}</p><div><span>更新：${item.updated}</span><span>信息状态：${item.verified}</span></div></div>
+        <div class="detail-hero"><span class="cat" style="--c:${category.color}">${category.name}</span><h1>${item.title}</h1><p>${item.summary}</p><div><span>信息状态：${item.verified}</span></div></div>
         ${mediaHtml(item.media)}
         ${item.sections ? `<section class="detail-keypoints"><h2>先看重点</h2><div>${item.sections.map(section => `<article><h3>${section.title}</h3><p>${section.text}</p></article>`).join('')}</div></section>` : ''}
         ${item.download ? `<a class="detail-download" href="${item.download.href}" download><span>↓</span><div><b>${item.download.label}</b><small>${item.download.size}</small></div><i>下载文件</i></a>` : ''}
         <section class="detail-content"><h2>完整说明</h2><ol>${item.content.map((paragraph, index) => `<li><span>${String(index + 1).padStart(2, '0')}</span><p>${paragraph}</p></li>`).join('')}</ol></section>
-        <section class="detail-source"><div><small>参考来源</small><b>${item.source}</b><span>整理更新时间：${item.updated}</span></div>${item.sourceUrl ? `<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 ↗</a>` : ''}</section>
+        <section class="detail-source"><div><small>参考来源</small><b>${item.source}</b></div>${item.sourceUrl ? `<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 ↗</a>` : ''}</section>
       </article>
       <aside class="detail-aside"><div><small>信息状态</small><strong>${item.verified}</strong><p>涉及费用、账号、开放时间和管理规定时，请再核对学校最新通知。</p></div>${related.length ? `<div><small>同类指南</small>${related.map(entry => `<a href="./guide.html?id=${entry.id}"><b>${entry.title}</b><span>查看全文 →</span></a>`).join('')}</div>` : ''}<a class="ask-side" href="./index.html#ask">还有疑问？<b>问启航助手 →</b></a></aside>
     </main>

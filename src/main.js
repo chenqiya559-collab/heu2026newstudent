@@ -27,7 +27,7 @@ app.innerHTML = `
         <h1>从这里，<br>开始你的<span>大学航程。</span></h1>
         <p>一份由在校生共同维护的新生生存指南。把零散通知、真实经验和官方入口，整理成你随时找得到的答案。</p>
         <div class="hero-actions"><a class="primary" href="#guide">开始探索 <span>↓</span></a><button class="ghost" data-focus-ask>直接提问 <span>⌘ K</span></button></div>
-        <div class="trust"><span>✓ 标注信息来源</span><span>✓ 显示更新时间</span><span>✓ 不确定就明确告诉你</span></div>
+        <div class="trust"><span>✓ 标注信息来源</span><span>✓ 清晰标记适用范围</span><span>✓ 不确定就明确告诉你</span></div>
       </div>
       <div class="hero-card">
         <div class="orbit one"></div><div class="orbit two"></div>
@@ -90,7 +90,7 @@ app.innerHTML = `
 
     <section class="sources section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow"><i></i> OFFICIAL CHANNELS</div><h2>认准官方信息入口</h2><p>关键政策、日期和流程，以这些渠道发布的信息为准。</p></div></div><div class="source-grid">${officialLinks.map((l,i)=>`<a href="${l.url}" target="_blank" rel="noopener"><span>0${i+1}</span><div><b>${l.name}</b><small>${l.desc}</small></div><i>↗</i></a>`).join('')}</div></div></section>
   </main>
-  <footer><div class="shell"><div class="brand inverse"><span class="brand-mark">H</span><span>启航 HEU<small>2026 新生入学指南</small></span></div><p>学生团队整理 · 非学校官方网站<br>信息有误？欢迎帮助我们一起完善。</p><button id="feedback">提交纠错 / 使用反馈 ↗</button></div><div class="footline shell"><span>最后更新：2026 年 8 月 1 日</span><span>愿你在这里，找到自己的航向。</span></div></footer>
+  <footer><div class="shell"><div class="brand inverse"><span class="brand-mark">H</span><span>启航 HEU<small>2026 新生入学指南</small></span></div><p>学生团队整理 · 非学校官方网站<br>信息有误？欢迎帮助我们一起完善。</p><button id="feedback">提交纠错 / 使用反馈 ↗</button></div><div class="footline shell"><span>学生团队整理</span><span>愿你在这里，找到自己的航向。</span></div></footer>
   <dialog id="detail-dialog"><button class="dialog-close">×</button><div id="dialog-body"></div></dialog>
   <dialog id="map-dialog"><button class="dialog-close">×</button><div class="map-dialog-head"><div><span id="map-dialog-tag"></span><h2 id="map-dialog-title"></h2><p id="map-dialog-desc"></p></div><a id="map-original" target="_blank">查看原图 ↗</a></div><div class="map-image-wrap"><img id="map-dialog-image" alt="校园地图大图"></div></dialog>
   <dialog id="feedback-dialog"><button class="dialog-close">×</button><div class="feedback-form"><div class="eyebrow"><i></i> FEEDBACK</div><h2>帮助我们做得更准</h2><p>这是演示版反馈入口。部署时可将表单接入腾讯问卷、金数据或你们自己的后端。</p><label>反馈类型<select><option>信息有误</option><option>缺少内容</option><option>使用体验</option><option>其他建议</option></select></label><label>具体内容<textarea placeholder="请描述你遇到的问题或建议……"></textarea></label><button class="primary" id="fake-submit">提交反馈</button></div></dialog>
@@ -100,7 +100,7 @@ function renderGuides() {
   const list = currentCategory === 'all' ? guideItems : guideItems.filter(i => i.category === currentCategory);
   document.querySelector('#guide-grid').innerHTML = list.map((item, index) => {
     const cat = categories.find(c => c.id === item.category);
-    return `<a class="guide-card" href="./guide.html?id=${item.id}" style="--delay:${index*40}ms" data-id="${item.id}"><div class="card-top"><span class="cat" style="--c:${cat.color}">${cat.name}</span><span class="badge ${item.priority==='必看'?'hot':''}">${item.priority}</span></div><h3>${item.title}</h3><p>${item.summary}</p><div class="card-meta"><span>更新于 ${item.updated.slice(5).replace('-','/')}</span><span>阅读全文 →</span></div></a>`;
+    return `<a class="guide-card" href="./guide.html?id=${item.id}" style="--delay:${index*40}ms" data-id="${item.id}"><div class="card-top"><span class="cat" style="--c:${cat.color}">${cat.name}</span><span class="badge ${item.priority==='必看'?'hot':''}">${item.priority}</span></div><h3>${item.title}</h3><p>${item.summary}</p><div class="card-meta"><span>参考信息已标注</span><span>阅读全文 →</span></div></a>`;
   }).join('');
   document.querySelectorAll('.guide-card').forEach(card => card.addEventListener('click', () => openGuide(card.dataset.id)));
 }
