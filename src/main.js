@@ -117,7 +117,7 @@ function openMap(id) {
 
 function openGuide(id) {
   const item = guideItems.find(i => i.id === id); const cat = categories.find(c => c.id === item.category);
-  document.querySelector('#dialog-body').innerHTML = `<span class="cat" style="--c:${cat.color}">${cat.name}</span><h2>${item.title}</h2><p class="lead">${item.summary}</p><div class="verify">信息状态：<b>${item.verified}</b></div>${item.sections ? `<div class="article-sections">${item.sections.map(section=>`<section><h3>${section.title}</h3><p>${section.text}</p></section>`).join('')}</div>` : ''}<ol>${item.content.map(c=>`<li>${c}</li>`).join('')}</ol><div class="citation"><small>参考来源</small><b>${item.source}</b>${item.sourceUrl?`<a href="${item.sourceUrl}" target="_blank">访问来源 ↗</a>`:''}<span>整理更新时间：${item.updated}</span></div>`;
+  document.querySelector('#dialog-body').innerHTML = `<span class="cat" style="--c:${cat.color}">${cat.name}</span><h2>${item.title}</h2><p class="lead">${item.summary}</p><div class="verify">信息状态：<b>${item.verified}</b></div>${item.sections ? `<div class="article-sections">${item.sections.map(section=>`<section><h3>${section.title}</h3><p>${section.text}</p></section>`).join('')}</div>` : ''}<ol>${item.content.map(c=>`<li>${c}</li>`).join('')}</ol><div class="citation"><small>参考来源</small><b>${item.source}</b>${item.sourceUrl?`<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 ↗</a>`:''}<span>整理更新时间：${item.updated}</span></div>`;
   document.querySelector('#detail-dialog').showModal();
 }
 
