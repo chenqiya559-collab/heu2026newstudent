@@ -344,7 +344,20 @@ function studentLoanDirectAnswer(question) {
   if(/(学费|缴费|不交|缓交|抵扣|扣学费|到账)/.test(normalized)) points.push('贷款额度覆盖的学费一般不要重复缴纳；是否暂缓缴费、到账后如何抵扣及差额如何补交，以学校财务规则和辅导员通知为准。');
   if(/(首贷|续贷|申请|怎么办|怎么弄|流程|共同借款人)/.test(normalized)) points.push('生源地贷款通常在户籍所在地按当地承办机构要求申请；首贷、续贷和共同借款人材料可能不同，请以当地资助中心和当年政策为准。');
   if(!points.length) points.push('国家助学贷款主要用于学费和住宿费，常见类型为生源地信用助学贷款和校园地国家助学贷款，同一学年不能同时申请两种。', '已办理生源地贷款的同学要保存受理证明或回执，到校后按通知完成学校确认。');
-  return {html:`可以，助学贷款这块我单独给你查：<ul>${points.map(point=>`<li>${escapeHtml(point)}</li>`).join('')}</ul><em>贷款额度、承办银行、申请时间和缴费结算方式可能调整，请以当年正式通知为准；拿不准时直接问辅导员。</em>`,hits:[{item,score:100}]};
+  return {html:`<ul>${points.map(point=>`<li>${escapeHtml(point)}</li>`).join('')}</ul><em>额度、银行、申请时间和结算方式以当年通知为准；拿不准时直接问辅导员。</em>`,hits:[{item,score:100}]};
+}
+function selectDetailedEvidence(chunks) {
+  const candidates=chunks.filter(chunk=>chunk.score>=Math.max(10,chunks[0].score*.25));
+  const itemsWithDetails=new Set(candidates.filter(chunk=>chunk.type!=='摘要').map(chunk=>chunk.item.id));
+  const ranked=candidates.filter(chunk=>chunk.type!=='摘要'||!itemsWithDetails.has(chunk.item.id)).sort((a,b)=>(b.type!=='摘要')-(a.type!=='摘要')||b.score-a.score||b.text.length-a.text.length);
+  const selected=[]; const perItem=new Map();
+  ranked.forEach(chunk=>{
+    if(selected.length>=4||(perItem.get(chunk.item.id)||0)>=2) return;
+    const text=ragNormalize(chunk.text);
+    if(selected.some(existing=>{const prior=ragNormalize(existing.text);return prior.includes(text)||text.includes(prior)})) return;
+    selected.push(chunk); perItem.set(chunk.item.id,(perItem.get(chunk.item.id)||0)+1);
+  });
+  return selected;
 }
 function answer(question) {
   const unsafeAnswer=unsafeRequestFallback(question); if(unsafeAnswer) return unsafeAnswer;
@@ -352,15 +365,11 @@ function answer(question) {
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
   const loanAnswer=studentLoanDirectAnswer(question); if(loanAnswer) return loanAnswer;
   const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return guidanceFallback(question);
-  const topScore=chunks[0].score; const confidence=topScore>=45?'高':topScore>=24?'中':'待确认';
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
-  const evidenceChunks=chunks.filter((chunk,index)=>index===0||chunk.score>=Math.max(10,chunks[0].score*.25)).slice(0,6); const evidence=evidenceChunks.map(chunk=>`<li><b>${escapeHtml(chunk.item.title)}｜${escapeHtml(chunk.type)}</b>：${escapeHtml(chunk.text)}</li>`).join('');
+  const evidenceChunks=selectDetailedEvidence(chunks); const evidence=evidenceChunks.map(chunk=>`<li>${escapeHtml(chunk.text)}</li>`).join('');
   const evidenceDocs=[...new Set(evidenceChunks.map(chunk=>chunk.item.id))]; const citedDocs=docs.filter(item=>evidenceDocs.includes(item.id));
   const downloads=citedDocs.filter(item=>item.download).map(item=>`<a class="chat-download" href="${item.download.href}" download>↓ ${item.download.label}（${item.download.size}）</a>`).join('');
-  const status=[...new Set(citedDocs.map(item=>item.verified))].join('；');
-  const sourceList=citedDocs.slice(0,3).map(item=>`“${escapeHtml(item.title)}”`).join('、');
-  const intentLabel=chunks[0].intent?.label || '综合检索';
-  return {html:`我按“${intentLabel}”理解你的问题，并从 ${sourceList} 中检索到这些依据：<ul>${evidence}</ul>${downloads}<em>检索置信度：${confidence}。信息状态：${escapeHtml(status)}。涉及账号、支付、日期、路线和管理政策时，请以学校最新通知及现场标识为准。</em>`,hits:citedDocs.map(item=>({item,score:chunks.filter(chunk=>chunk.item.id===item.id).reduce((sum,chunk)=>sum+chunk.score,0)}))};
+  return {html:`<ul>${evidence}</ul>${downloads}<em>费用、日期、账号和管理政策以学校最新通知为准。</em>`,hits:citedDocs.map(item=>({item,score:chunks.filter(chunk=>chunk.item.id===item.id).reduce((sum,chunk)=>sum+chunk.score,0)}))};
 }
 function saveQuestionStat(question) { try { const key='heu-rag-question-stats'; const stats=JSON.parse(localStorage.getItem(key)||'{}'); const normalized=ragNormalize(question).slice(0,40); if(normalized) stats[normalized]=(stats[normalized]||0)+1; localStorage.setItem(key,JSON.stringify(stats)); } catch (_) {} }
 function renderPopularQuestions() { try { const stats=JSON.parse(localStorage.getItem('heu-rag-question-stats')||'{}'); const entries=Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,3); const target=document.querySelector('#popular-questions'); if(target) target.innerHTML=entries.length?entries.map(([question,count])=>`<button data-popular-question="${escapeHtml(question)}">${escapeHtml(question)} <small>${count} 次</small></button>`).join(''):'提问后会在本机匿名汇总，帮助后续补充知识库'; target?.querySelectorAll('[data-popular-question]').forEach(button=>button.addEventListener('click',()=>submitQuestion(button.dataset.popularQuestion))); } catch (_) {} }

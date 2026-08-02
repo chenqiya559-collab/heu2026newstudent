@@ -26,7 +26,7 @@ if (!item) {
     <main class="detail-shell">
       <article class="detail-article">
         <div class="detail-breadcrumb"><a href="./index.html">首页</a><span>/</span><a href="./index.html#guide">新生指南</a><span>/</span><b>${category.name}</b></div>
-        <div class="detail-hero"><span class="cat" style="--c:${category.color}">${category.name}</span><h1>${item.title}</h1><p>${item.summary}</p><div><span>信息状态：${item.verified}</span></div></div>
+        <div class="detail-hero"><span class="cat" style="--c:${category.color}">${category.name}</span><h1>${item.title}</h1>${item.sections ? '' : `<p>${item.summary}</p>`}<div><span>信息状态：${item.verified}</span></div></div>
         ${item.sections ? `<section class="detail-keypoints"><h2>先看重点</h2><div>${item.sections.map(section => `<article><h3>${section.title}</h3><p>${section.text}</p></article>`).join('')}</div></section>` : ''}
         ${mediaHtml(item.media)}
         ${item.download ? `<a class="detail-download" href="${item.download.href}" download><span>↓</span><div><b>${item.download.label}</b><small>${item.download.size}</small></div><i>下载文件</i></a>` : ''}
