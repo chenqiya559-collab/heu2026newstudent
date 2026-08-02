@@ -149,7 +149,7 @@ function legacyRetrieve(query) {
   return guideItems.map(item=>{ const sectionText=item.sections?.map(section=>`${section.title} ${section.text}`).join(' ')||''; const hay=`${item.title} ${item.summary} ${item.keywords} ${item.content.join(' ')} ${sectionText}`.toLowerCase(); let score=0; q.forEach(t=>{if(hay.includes(t)) score+=t.length>1?3:1}); if(item.title.includes(query))score+=10; return {item,score}; }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
 }
 function legacyAnswer(question) {
-  const hits=legacyRetrieve(question); if(!hits.length) return {html:`这个问题暂时不在本站知识库中，我不想猜测。建议你先查看学校官网或咨询辅导员、学院教学办公室。`,hits:[]};
+  const hits=legacyRetrieve(question); if(!hits.length) return {html:`这个问题需要更多具体信息。生活经验类问题可以去“赞噢校园集市”搜索或发帖请教学长学姐；政策、缴费和账号事项请同时核对学校官方通知。`,hits:[]};
   const usefulHits=hits.filter((hit,index)=>index===0||hit.score>=hits[0].score*.55).slice(0,2);
   const details=usefulHits.flatMap((hit,index)=>hit.item.content.slice(0,index===0?5:2)).slice(0,7);
   const downloads=usefulHits.filter(hit=>hit.item.download).map(hit=>`<a class="chat-download" href="${hit.item.download.href}" download>↓ ${hit.item.download.label}（${hit.item.download.size}）</a>`).join('');
@@ -283,9 +283,14 @@ function hasSpecificQuestionAnchor(question) {
   const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','饭卡','校园网','宿舍','洗浴','浴池','快递','社团','诈骗','哈军工','校训','学科','赞噢','集市','吃饭','食堂','餐厅','大美','小美','至美','快乐食间','小公交','校车','购物','超市','启航','北体育场','北体','外卖','取餐','打印','21b','教材','二手书','图书馆','借阅'];
   return anchors.some(anchor=>normalized.includes(ragNormalize(anchor)));
 }
+function guidanceFallback(question) {
+  const market=guideItems.find(item=>item.id==='zanou-campus-market'); const sensitive=/(缴费|学费|账号|密码|验证码|政策|处分|录取|学籍|成绩|考试|报到)/.test(question);
+  const official=sensitive?'这类事项还涉及正式规则，请同时核对学校官网、迎新系统、学院通知或咨询辅导员。':'如果帖子里的回答不一致，再回到学校官方渠道核验。';
+  return {html:`这个问题可能需要更多现场经验或具体背景。你可以先到“赞噢校园集市”搜索关键词，没有合适答案时再发帖，把年级、地点和具体需求写清楚，通常更容易得到学长学姐的有效回复。<em>${official}</em>`,hits:market?[{item:market,score:1}]:[]};
+}
 function answer(question) {
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
-  const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return {html:'这个问题暂时没有足够的知识库证据，我不想猜测。你可以换一种说法，补充地点、服务或具体事项，或查看学校官网、本科生院、招生网或学院教学办公室的最新通知。',hits:[]};
+  const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return guidanceFallback(question);
   const topScore=chunks[0].score; const confidence=topScore>=45?'高':topScore>=24?'中':'待确认';
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
   const evidenceChunks=chunks.filter((chunk,index)=>index===0||chunk.score>=Math.max(10,chunks[0].score*.25)).slice(0,6); const evidence=evidenceChunks.map(chunk=>`<li><b>${escapeHtml(chunk.item.title)}｜${escapeHtml(chunk.type)}</b>：${escapeHtml(chunk.text)}</li>`).join('');
