@@ -346,6 +346,20 @@ function studentLoanDirectAnswer(question) {
   if(!points.length) points.push('国家助学贷款主要用于学费和住宿费，常见类型为生源地信用助学贷款和校园地国家助学贷款，同一学年不能同时申请两种。', '已办理生源地贷款的同学要保存受理证明或回执，到校后按通知完成学校确认。');
   return {html:`<ul>${points.map(point=>`<li>${escapeHtml(point)}</li>`).join('')}</ul><em>额度、银行、申请时间和结算方式以当年通知为准；拿不准时直接问辅导员。</em>`,hits:[{item,score:100}]};
 }
+function studyServicesDirectAnswer(question) {
+  const normalized=ragNormalize(question);
+  const wantsPrinting=/(打印|复印|印刷|打印店)/.test(normalized);
+  const wantsBorrowing=/(借书|借阅|图书馆借|馆藏|索书号)/.test(normalized);
+  const wantsTextbooks=/(教材|课本|二手书|买书|书店)/.test(normalized);
+  if(!wantsPrinting&&!wantsBorrowing&&!wantsTextbooks) return null;
+  const item=guideItems.find(entry=>entry.id==='printing-books-library');
+  if(!item) return null;
+  const blocks=[];
+  if(wantsPrinting) blocks.push('<li><b>打印：</b>可去 21B 负一楼打印店、启航活动中心地下打印店，或使用部分公寓楼一楼的自助印刷设备。各处收费、营业时间和装订服务不同；打印前核对 PDF、页数、单双面、彩色和份数。</li>');
+  if(wantsBorrowing) blocks.push('<li><b>借书：</b>图书馆图书可以借阅。先在图书馆检索系统查询馆藏、索书号和可借状态，再按索书号找书；借阅期限、续借和逾期规则以图书馆当前页面为准。</li>');
+  if(wantsTextbooks) blocks.push('<li><b>教材：</b>先等任课教师、学院或班级确认书目和版本，再选择统一领取、新书或二手书；不要只凭课程名称提前购买旧版教材。</li>');
+  return {html:`<ul>${blocks.join('')}</ul><em>地点开放情况、打印价格和图书馆借阅规则以现场及当前系统为准。</em>`,hits:[{item,score:100}]};
+}
 function selectDetailedEvidence(chunks) {
   const candidates=chunks.filter(chunk=>chunk.score>=Math.max(10,chunks[0].score*.25));
   const itemsWithDetails=new Set(candidates.filter(chunk=>chunk.type!=='摘要').map(chunk=>chunk.item.id));
@@ -364,6 +378,7 @@ function answer(question) {
   const otherSchoolAnswer=otherSchoolFallback(question); if(otherSchoolAnswer) return otherSchoolAnswer;
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
   const loanAnswer=studentLoanDirectAnswer(question); if(loanAnswer) return loanAnswer;
+  const studyServicesAnswer=studyServicesDirectAnswer(question); if(studyServicesAnswer) return studyServicesAnswer;
   const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return guidanceFallback(question);
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
   const evidenceChunks=selectDetailedEvidence(chunks); const evidence=evidenceChunks.map(chunk=>`<li>${escapeHtml(chunk.text)}</li>`).join('');
