@@ -117,7 +117,7 @@ function openMap(id) {
 
 function openGuide(id) {
   const item = guideItems.find(i => i.id === id); const cat = categories.find(c => c.id === item.category);
-  document.querySelector('#dialog-body').innerHTML = `<span class="cat" style="--c:${cat.color}">${cat.name}</span><h2>${item.title}</h2><p class="lead">${item.summary}</p><div class="verify">信息状态：<b>${item.verified}</b></div>${item.sections ? `<div class="article-sections">${item.sections.map(section=>`<section><h3>${section.title}</h3><p>${section.text}</p></section>`).join('')}</div>` : ''}<ol>${item.content.map(c=>`<li>${c}</li>`).join('')}</ol><div class="citation"><small>参考来源</small><b>${item.source}</b>${item.sourceUrl?`<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 ↗</a>`:''}<span>整理更新时间：${item.updated}</span></div>`;
+  document.querySelector('#dialog-body').innerHTML = `<span class="cat" style="--c:${cat.color}">${cat.name}</span><h2>${item.title}</h2><p class="lead">${item.summary}</p><div class="verify">信息状态：<b>${item.verified}</b></div>${item.media ? `<div class="article-media ${item.media.length === 1 ? 'single' : ''}">${item.media.map(media=>`<figure><img src="${media.src}" alt="${media.alt}" loading="lazy"><figcaption>${media.caption}</figcaption></figure>`).join('')}</div>` : ''}${item.sections ? `<div class="article-sections">${item.sections.map(section=>`<section><h3>${section.title}</h3><p>${section.text}</p></section>`).join('')}</div>` : ''}${item.download ? `<a class="resource-download" href="${item.download.href}" download><span>↓</span><div><b>${item.download.label}</b><small>${item.download.size}</small></div><i>立即下载</i></a>` : ''}<ol>${item.content.map(c=>`<li>${c}</li>`).join('')}</ol><div class="citation"><small>参考来源</small><b>${item.source}</b>${item.sourceUrl?`<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 ↗</a>`:''}<span>整理更新时间：${item.updated}</span></div>`;
   document.querySelector('#detail-dialog').showModal();
 }
 
@@ -136,12 +136,15 @@ const stopWords = new Set('的了是我你要有吗呢啊什么怎么如何一�
 function tokens(text) { return [...new Set((text.toLowerCase().match(/[\u4e00-\u9fa5]{1,4}|[a-z0-9]+/g)||[]).flatMap(x=>x.length>2&&/[\u4e00-\u9fa5]/.test(x)?[x,...x.split('')]:[x]).filter(x=>!stopWords.has(x)))]; }
 function retrieve(query) {
   const q = tokens(query);
-  return guideItems.map(item=>{ const hay=`${item.title} ${item.summary} ${item.keywords} ${item.content.join(' ')}`.toLowerCase(); let score=0; q.forEach(t=>{if(hay.includes(t)) score+=t.length>1?3:1}); if(item.title.includes(query))score+=10; return {item,score}; }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
+  return guideItems.map(item=>{ const sectionText=item.sections?.map(section=>`${section.title} ${section.text}`).join(' ')||''; const hay=`${item.title} ${item.summary} ${item.keywords} ${item.content.join(' ')} ${sectionText}`.toLowerCase(); let score=0; q.forEach(t=>{if(hay.includes(t)) score+=t.length>1?3:1}); if(item.title.includes(query))score+=10; return {item,score}; }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
 }
 function answer(question) {
   const hits=retrieve(question); if(!hits.length) return {html:`这个问题暂时不在本站知识库中，我不想猜测。建议你先查看学校官网或咨询辅导员、学院教学办公室。`,hits:[]};
-  const top=hits[0].item; const bullets=top.content.slice(0,4).map(x=>`<li>${x}</li>`).join('');
-  return {html:`根据“${top.title}”条目，你可以这样处理：<ul>${bullets}</ul><em>提醒：${top.verified}，涉及具体日期、费用、政策时请再核对最新官方通知。</em>`,hits};
+  const usefulHits=hits.filter((hit,index)=>index===0||hit.score>=hits[0].score*.55).slice(0,2);
+  const details=usefulHits.flatMap((hit,index)=>hit.item.content.slice(0,index===0?5:2)).slice(0,7);
+  const downloads=usefulHits.filter(hit=>hit.item.download).map(hit=>`<a class="chat-download" href="${hit.item.download.href}" download>↓ ${hit.item.download.label}（${hit.item.download.size}）</a>`).join('');
+  const sourceNames=usefulHits.map(hit=>`“${hit.item.title}”`).join('和');
+  return {html:`我检索了${sourceNames}，整理后的建议如下：<ul>${details.map(detail=>`<li>${detail}</li>`).join('')}</ul>${downloads}<em>信息状态：${usefulHits.map(hit=>hit.item.verified).join('；')}。涉及账号、支付、日期和管理政策时，请以 App 当前页面及学校最新通知为准。</em>`,hits};
 }
 function submitQuestion(q) {
   if(!q.trim()) return; const box=document.querySelector('#messages');
