@@ -3,11 +3,20 @@ import { categories, guideItems, timeline, officialLinks } from './data.js';
 const app = document.querySelector('#app');
 let currentCategory = 'all';
 
+const mapResources = [
+  { id: 'campus-map', title: 'HEU 校园平面图', tag: '总览', image: './assets/maps/heu-campus-map.jpg', desc: '教学楼、宿舍、食堂、停车场与校门分布', keywords: '校园总览 校园地图 平面图 教学楼 宿舍 食堂 校门 停车场 位置 导航' },
+  { id: 'panorama', title: '校园手绘全景图', tag: '全景', image: './assets/maps/campus-panorama.jpg', desc: '按道路字母和建筑数字快速定位校园地点', keywords: '全景 手绘 建筑 道路 1号楼 图书馆 体育馆 公寓 医院 食堂' },
+  { id: 'building-11', title: '11 号教学楼楼层图', tag: '教学楼', image: './assets/maps/building-11.jpg', desc: '1—5 层教室、楼梯、卫生间位置示意', keywords: '11号楼 11楼 教室 101 102 1层 2层 3层 4层 5层 楼梯 卫生间' },
+  { id: 'bus-route', title: '校园小公交路线', tag: '交通', image: './assets/maps/campus-bus-route.jpg', desc: '北门、教学楼、体育馆、医院、公寓等站点', keywords: '公交 小公交 校车 路线 北门 东门 31号楼 41号楼 21B 11号楼 校医院 美食城 主楼 动力楼 水声楼' },
+  { id: 'class-times', title: '上课时间表', tag: '时间', image: './assets/maps/class-times.jpg', desc: '第 1—13 小节上下课时间，一眼看懂', keywords: '上课时间 下课 时间表 第一大节 第二大节 第三大节 第四大节 第五大节 早八 晚课' },
+  { id: 'colleges', title: '学院名称与代码', tag: '学院', image: './assets/maps/college-names.jpg', desc: '学院代码与学院名称快速对照', keywords: '学院代码 学院名称 学院 名称 代码 船舶 航建 动力 智能 水声 计算机 软件 保密 机电 信通 经管 材化 外语 人文 核 体育 马克思 数学 物理' }
+];
+
 app.innerHTML = `
   <div class="notice"><span>信息提示</span> 本站为学生团队整理，具体安排请以学校、学院 2026 年官方通知为准。</div>
   <header class="nav shell">
     <a class="brand" href="#top"><span class="brand-mark">H</span><span>启航 <b>HEU</b><small>2026 新生指南</small></span></a>
-    <nav><a href="#guide">入学指南</a><a href="#timeline">报到时间线</a><a href="#ask">AI 问答</a><a href="#sources">官方入口</a></nav>
+    <nav><a href="#maps">校园地图</a><a href="#guide">入学指南</a><a href="#timeline">报到时间线</a><a href="#ask">AI 问答</a></nav>
     <button class="nav-ask" data-focus-ask>问问启航助手 <span>→</span></button>
   </header>
 
@@ -33,6 +42,23 @@ app.innerHTML = `
       ${categories.map(c => `<button data-category="${c.id}"><span style="--c:${c.color}">${c.icon.slice(0,1)}</span><b>${c.name}</b><small>${guideItems.filter(i=>i.category===c.id).length} 篇指南</small></button>`).join('')}
     </section>
 
+    <section class="map-hub shell section" id="maps">
+      <div class="map-intro">
+        <div>
+          <div class="eyebrow"><i></i> CAMPUS NAVIGATION</div>
+          <h2>第一次来，也不会迷路</h2>
+          <p>输入地点、楼号或需求，快速找到对应地图和实用信息。</p>
+        </div>
+        <div class="map-search">
+          <span>⌕</span><input id="map-query" placeholder="搜地点：例如 11号楼、小公交、上课时间" autocomplete="off"><button id="map-search-clear" aria-label="清空搜索">×</button>
+        </div>
+      </div>
+      <div class="map-suggestions"><span>快速查找</span><button>校园总览</button><button>11号楼</button><button>小公交</button><button>上课时间</button><button>学院代码</button></div>
+      <div class="map-grid" id="map-grid"></div>
+      <div class="map-empty" id="map-empty"><b>没有找到对应地图</b><span>试试搜索“教学楼”“公交”或“学院”</span></div>
+      <div class="map-note">地图资料来源于校内公开信息与同学整理，建筑用途和线路可能调整，请以现场标识及学校最新通知为准。</div>
+    </section>
+
     <section class="section shell" id="guide">
       <div class="section-head"><div><div class="eyebrow"><i></i> FRESHMAN FIELD GUIDE</div><h2>新生必备指南</h2><p>过来人的经验，配上可追溯的信息来源。</p></div><div class="filters"><button class="active" data-filter="all">全部</button>${categories.map(c=>`<button data-filter="${c.id}">${c.name}</button>`).join('')}</div></div>
       <div id="guide-grid" class="guide-grid"></div>
@@ -56,6 +82,7 @@ app.innerHTML = `
   </main>
   <footer><div class="shell"><div class="brand inverse"><span class="brand-mark">H</span><span>启航 HEU<small>2026 新生入学指南</small></span></div><p>学生团队整理 · 非学校官方网站<br>信息有误？欢迎帮助我们一起完善。</p><button id="feedback">提交纠错 / 使用反馈 ↗</button></div><div class="footline shell"><span>最后更新：2026 年 8 月 1 日</span><span>愿你在这里，找到自己的航向。</span></div></footer>
   <dialog id="detail-dialog"><button class="dialog-close">×</button><div id="dialog-body"></div></dialog>
+  <dialog id="map-dialog"><button class="dialog-close">×</button><div class="map-dialog-head"><div><span id="map-dialog-tag"></span><h2 id="map-dialog-title"></h2><p id="map-dialog-desc"></p></div><a id="map-original" target="_blank">查看原图 ↗</a></div><div class="map-image-wrap"><img id="map-dialog-image" alt="校园地图大图"></div></dialog>
   <dialog id="feedback-dialog"><button class="dialog-close">×</button><div class="feedback-form"><div class="eyebrow"><i></i> FEEDBACK</div><h2>帮助我们做得更准</h2><p>这是演示版反馈入口。部署时可将表单接入腾讯问卷、金数据或你们自己的后端。</p><label>反馈类型<select><option>信息有误</option><option>缺少内容</option><option>使用体验</option><option>其他建议</option></select></label><label>具体内容<textarea placeholder="请描述你遇到的问题或建议……"></textarea></label><button class="primary" id="fake-submit">提交反馈</button></div></dialog>
 `;
 
@@ -68,6 +95,26 @@ function renderGuides() {
   document.querySelectorAll('.guide-card').forEach(card => card.addEventListener('click', () => openGuide(card.dataset.id)));
 }
 
+function renderMaps(query = '') {
+  const normalized = query.trim().toLowerCase();
+  const list = normalized ? mapResources.filter(item => `${item.title} ${item.tag} ${item.desc} ${item.keywords}`.toLowerCase().includes(normalized)) : mapResources;
+  const grid = document.querySelector('#map-grid');
+  grid.innerHTML = list.map((item, index) => `<article class="map-card ${index === 0 && !normalized ? 'featured' : ''}" data-map="${item.id}"><div class="map-thumb"><img src="${item.image}" alt="${item.title}" loading="lazy"><span>${item.tag}</span><i>点击放大</i></div><div class="map-card-copy"><small>0${mapResources.indexOf(item)+1}</small><div><h3>${item.title}</h3><p>${item.desc}</p></div><button aria-label="查看${item.title}">↗</button></div></article>`).join('');
+  document.querySelector('#map-empty').classList.toggle('show', list.length === 0);
+  grid.querySelectorAll('[data-map]').forEach(card => card.addEventListener('click', () => openMap(card.dataset.map)));
+}
+
+function openMap(id) {
+  const item = mapResources.find(map => map.id === id);
+  document.querySelector('#map-dialog-tag').textContent = item.tag;
+  document.querySelector('#map-dialog-title').textContent = item.title;
+  document.querySelector('#map-dialog-desc').textContent = item.desc;
+  document.querySelector('#map-dialog-image').src = item.image;
+  document.querySelector('#map-dialog-image').alt = item.title;
+  document.querySelector('#map-original').href = item.image;
+  document.querySelector('#map-dialog').showModal();
+}
+
 function openGuide(id) {
   const item = guideItems.find(i => i.id === id); const cat = categories.find(c => c.id === item.category);
   document.querySelector('#dialog-body').innerHTML = `<span class="cat" style="--c:${cat.color}">${cat.name}</span><h2>${item.title}</h2><p class="lead">${item.summary}</p><div class="verify">信息状态：<b>${item.verified}</b></div><ol>${item.content.map(c=>`<li>${c}</li>`).join('')}</ol><div class="citation"><small>参考来源</small><b>${item.source}</b>${item.sourceUrl?`<a href="${item.sourceUrl}" target="_blank">访问来源 ↗</a>`:''}<span>整理更新时间：${item.updated}</span></div>`;
@@ -78,6 +125,10 @@ document.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('clic
 document.querySelectorAll('[data-category]').forEach(b => b.addEventListener('click', () => { currentCategory=b.dataset.category; document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter===currentCategory)); renderGuides(); document.querySelector('#guide').scrollIntoView({behavior:'smooth'}); }));
 document.querySelectorAll('[data-focus-ask]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('#ask').scrollIntoView({behavior:'smooth'});setTimeout(()=>document.querySelector('#question').focus(),500)}));
 document.querySelectorAll('.dialog-close').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); }));
+document.querySelector('#map-query').addEventListener('input', event => renderMaps(event.target.value));
+document.querySelector('#map-search-clear').addEventListener('click', () => { const input=document.querySelector('#map-query'); input.value=''; renderMaps(); input.focus(); });
+document.querySelectorAll('.map-suggestions button').forEach(button => button.addEventListener('click', () => { const input=document.querySelector('#map-query'); input.value=button.textContent; renderMaps(button.textContent); }));
 document.querySelector('#feedback').addEventListener('click',()=>document.querySelector('#feedback-dialog').showModal());
 document.querySelector('#fake-submit').addEventListener('click',()=>{alert('感谢反馈！演示版已记录交互；正式部署请接入真实表单。');document.querySelector('#feedback-dialog').close()});
 
@@ -102,3 +153,4 @@ document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click'
 document.querySelector('#clear-chat').addEventListener('click',()=>document.querySelector('#messages').innerHTML='<div class="message bot-msg"><span class="bot">H</span><div>对话已清空。还有什么想了解的？</div></div>');
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.querySelector('#ask').scrollIntoView({behavior:'smooth'});document.querySelector('#question').focus()}});
 renderGuides();
+renderMaps();
