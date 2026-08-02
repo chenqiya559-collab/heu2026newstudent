@@ -189,13 +189,15 @@ const ragSynonymGroups = [
   ['移动校园','校园app','校园 APP','HEU校园','缴费','校园卡充值','财务服务'],
   ['校园卡','饭卡','校园码','电子校园卡','充值','余额'], ['校园网','wifi','wi-fi','无线网','网络','联网','HEU-AUTO','HEU-WLAN'], ['VPN','校外访问','内网','知网','图书馆数据库'],
   ['宿舍','公寓','寝室','宿寝','床位'], ['洗澡','洗浴','浴池','公共浴池','澡堂'], ['电器','大功率','用电','插排','违规电器'],
-  ['购物','买东西','超市','生活超市','生活用品','启航活动中心','启航地下','北体育场','北体','公寓楼下'], ['外卖','点外卖','送餐','取餐','外卖柜','取餐柜','东门','北门','南门'], ['打印','复印','印刷','打印店','21b','21B','PDF','装订'], ['教材','课本','书本','二手书','书店'], ['图书馆','借书','借阅','馆藏','索书号'],
+  ['吃饭','用餐','就餐','食堂','饭堂','餐厅','大美食堂','大美','小美食堂','小美','至美餐厅','至美','快乐食间','早餐','午饭','晚饭'], ['购物','买东西','超市','生活超市','生活用品','启航活动中心','启航地下','北体育场','北体','公寓楼下'], ['外卖','点外卖','送餐','取餐','外卖柜','取餐柜','东门','北门','南门'], ['打印','复印','印刷','打印店','21b','21B','PDF','装订'], ['教材','课本','书本','二手书','书店'], ['图书馆','借书','借阅','馆藏','索书号'],
   ['快递','邮寄','驿站','取件','收件','寄行李','行李'], ['公交','校车','小公交','接站'],
   ['PPT','模板','答辩','汇报','演示'], ['助学贷款','贷款回执','受理证明','助学金','资助'], ['社团','学生组织','学生会','招新','百团'],
   ['诈骗','防骗','骗局','刷单','陌生链接','冒充老师','缴费诈骗']
 ];
 const ragRelations = [
   { triggers:['校园卡','饭卡'], expands:['用途','食堂','吃饭','充值','余额','宿舍电费','缴电费','洗浴','浴池','卡槽','放水','扣费','挂失','校园码'] },
+  { triggers:['吃饭','食堂','餐厅','大美','小美','至美','快乐食间'], expands:['大美食堂','小美食堂','至美餐厅','快乐食间','校园卡','电子校园卡','校园码','校园地图','位置'] },
+  { triggers:['小公交','校车','公交'], expands:['校园小公交','路线图','站点','校内','校外','票价','费用','北门','教学楼','体育馆','校医院','公寓'] },
   { triggers:['洗浴','洗澡','浴池'], expands:['校园卡','卡槽','读卡器','放水','扣费','计费','营业时间'] },
   { triggers:['电费','缴电费'], expands:['校园卡','移动校园','充值','公寓','房间号','缴费'] },
   { triggers:['充值','充钱'], expands:['校园卡','移动校园','余额','到账','重复支付'] },
@@ -255,6 +257,8 @@ function retrieve(query) {
     if((normalized.includes('哈军工精神')||normalized.includes('军工精神'))&&chunk.textHay.includes('哈军工精神')) score+=55;
     if((normalized.includes('成立')||normalized.includes('哪年')||normalized.includes('建校'))&&chunk.textHay.includes('1953')) score+=45;
     if((normalized.includes('学科')||normalized.includes('专业实力')||normalized.includes('优势学科'))&&chunk.textHay.includes('三海一核')) score+=35;
+    if(['吃饭','食堂','餐厅','大美','小美','至美','快乐食间'].some(term=>normalized.includes(term))&&chunk.item.id==='campus-canteens-guide') score+=45;
+    if(['小公交','校车','校园公交'].some(term=>normalized.includes(term))&&chunk.item.id==='campus-shuttle-guide') score+=45;
     intent.boosts.forEach(term=>{const normalizedBoost=ragNormalize(term); if(chunk.textHay.includes(normalizedBoost)) score+=5; if(chunk.keywordHay.includes(normalizedBoost)) score+=3;});
     phraseTerms.forEach(phrase=>{if(chunk.textHay.includes(phrase)) score+=14; if(chunk.titleHay.includes(phrase)) score+=8;});
     terms.forEach(term=>{const weight=baseSet.has(term)?1:.32; if(chunk.textHay.includes(term)) score+=(term.length>=4?8:4)*weight; if(chunk.titleHay.includes(term)) score+=9*weight; if(chunk.keywordHay.includes(term)) score+=1.5*weight;});
@@ -276,7 +280,7 @@ function schoolFactAnswer(question) {
   return {html:`关于哈工程，这几条可以先记住：<ul>${facts.map(fact=>`<li>${escapeHtml(fact)}</li>`).join('')}</ul><em>这是一份面向新生的基础介绍，表述以学校官网最新信息为准。</em>`,hits:[{item,score:100}]};
 }
 function hasSpecificQuestionAnchor(question) {
-  const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','校园网','宿舍','洗浴','浴池','快递','社团','诈骗','哈军工','校训','学科','赞噢','集市','购物','超市','启航','北体育场','北体','外卖','取餐','打印','21b','教材','二手书','图书馆','借阅'];
+  const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','校园网','宿舍','洗浴','浴池','快递','社团','诈骗','哈军工','校训','学科','赞噢','集市','吃饭','食堂','餐厅','大美','小美','至美','快乐食间','小公交','校车','购物','超市','启航','北体育场','北体','外卖','取餐','打印','21b','教材','二手书','图书馆','借阅'];
   return anchors.some(anchor=>normalized.includes(ragNormalize(anchor)));
 }
 function answer(question) {
