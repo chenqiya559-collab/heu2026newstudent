@@ -16,7 +16,7 @@ app.innerHTML = `
   <div class="notice"><span>信息提示</span> 本站为学生团队整理，具体安排请以学校、学院 2026 年官方通知为准。</div>
   <header class="nav shell">
     <a class="brand" href="#top"><span class="brand-mark">H</span><span>启航 <b>HEU</b><small>2026 新生指南</small></span></a>
-    <nav><a href="#maps">校园地图</a><a href="#guide">入学指南</a><a href="#timeline">报到时间线</a><a href="#ask">AI 问答</a></nav>
+    <nav><a href="#maps">校园地图</a><a href="#guide">入学指南</a><a href="#market">校园集市</a><a href="#ask">AI 问答</a></nav>
     <button class="nav-ask" data-focus-ask>问问启航助手 <span>→</span></button>
   </header>
 
@@ -67,6 +67,11 @@ app.innerHTML = `
     <section class="timeline-wrap" id="timeline"><div class="shell section">
       <div class="section-head light"><div><div class="eyebrow"><i></i> BEFORE ARRIVAL</div><h2>从录取到报到</h2><p>把重要事情放进一条时间线，少一点手忙脚乱。</p></div></div>
       <div class="timeline">${timeline.map((t,i)=>`<article><div class="num">${String(i+1).padStart(2,'0')}</div><div class="line"></div><small>${t.date}</small><h3>${t.title}</h3><p>${t.detail}</p></article>`).join('')}</div>
+    </div></section>
+
+    <section class="market-section section" id="market"><div class="shell market-layout">
+      <div class="market-mark"><img src="./assets/life/zanou-campus-market-logo.jpg" alt="赞噢校园集市标识" loading="lazy"><div><b>赞噢校园集市</b><small>Campus Market</small></div><i>✓</i></div>
+      <div class="market-copy"><div class="eyebrow"><i></i> CAMPUS COMMUNITY</div><h2>校园里的新消息，也能有人一起解答</h2><p>在微信搜索“赞噢校园集市”，可以浏览校园即时信息，或发帖向学长学姐请教课程、生活和社团经验。</p><div class="market-actions"><button class="primary" data-market-question>问问校园集市怎么用 <span>→</span></button><a class="ghost" href="./guide.html?id=zanou-campus-market">查看使用提醒 <span>↗</span></a></div><small>它适合交流经验；报到、缴费、账号和政策类信息，请始终以学校官方通知为准。</small></div>
     </div></section>
 
     <section class="ask-section shell section" id="ask">
@@ -127,6 +132,7 @@ function openGuide(id) {
 document.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('click', () => { currentCategory=b.dataset.filter; document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b)); renderGuides(); }));
 document.querySelectorAll('[data-category]').forEach(b => b.addEventListener('click', () => { currentCategory=b.dataset.category; document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter===currentCategory)); renderGuides(); document.querySelector('#guide').scrollIntoView({behavior:'smooth'}); }));
 document.querySelectorAll('[data-focus-ask]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('#ask').scrollIntoView({behavior:'smooth'});setTimeout(()=>document.querySelector('#question').focus(),500)}));
+document.querySelectorAll('[data-market-question]').forEach(button=>button.addEventListener('click',()=>{document.querySelector('#ask').scrollIntoView({behavior:'smooth'});setTimeout(()=>submitQuestion('赞噢校园集市怎么用？'),400)}));
 document.querySelectorAll('.dialog-close').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); }));
 document.querySelector('#map-query').addEventListener('input', event => renderMaps(event.target.value));
@@ -244,6 +250,10 @@ function retrieve(query) {
     if((normalized.includes('用途')||normalized.includes('功能')||normalized.includes('有哪些'))&&chunk.type==='摘要') score+=18;
     if((normalized.includes('丢了')||normalized.includes('丢卡')||normalized.includes('遗失'))&&chunk.textHay.includes('挂失')) score+=32;
     if(intent.id==='time'&&(/[0-9]{1,2}[:：][0-9]{2}/.test(chunk.text)||chunk.type.includes('时间'))) score+=20;
+    if(normalized.includes('校训')&&chunk.textHay.includes('大学至真大工至善')) score+=55;
+    if((normalized.includes('哈军工精神')||normalized.includes('军工精神'))&&chunk.textHay.includes('哈军工精神')) score+=55;
+    if((normalized.includes('成立')||normalized.includes('哪年')||normalized.includes('建校'))&&chunk.textHay.includes('1953')) score+=45;
+    if((normalized.includes('学科')||normalized.includes('专业实力')||normalized.includes('优势学科'))&&chunk.textHay.includes('三海一核')) score+=35;
     intent.boosts.forEach(term=>{const normalizedBoost=ragNormalize(term); if(chunk.textHay.includes(normalizedBoost)) score+=5; if(chunk.keywordHay.includes(normalizedBoost)) score+=3;});
     phraseTerms.forEach(phrase=>{if(chunk.textHay.includes(phrase)) score+=14; if(chunk.titleHay.includes(phrase)) score+=8;});
     terms.forEach(term=>{const weight=baseSet.has(term)?1:.32; if(chunk.textHay.includes(term)) score+=(term.length>=4?8:4)*weight; if(chunk.titleHay.includes(term)) score+=9*weight; if(chunk.keywordHay.includes(term)) score+=1.5*weight;});
@@ -254,7 +264,18 @@ function retrieve(query) {
   scored.forEach(chunk=>{const count=perItem.get(chunk.item.id)||0; const fingerprint=chunk.textHay.slice(0,42); if(count<3&&!seenText.has(fingerprint)){selected.push(chunk);perItem.set(chunk.item.id,count+1);seenText.add(fingerprint);}});
   return selected.slice(0,8).map(chunk=>({...chunk,intent}));
 }
+function schoolFactAnswer(question) {
+  const normalized=ragNormalize(question); const item=guideItems.find(entry=>entry.id==='heu-basics'); if(!item) return null;
+  const facts=[];
+  if(normalized.includes('校训')) facts.push(item.content[1]);
+  if(normalized.includes('哈军工')||normalized.includes('军工精神')) facts.push(item.content[2]);
+  if(normalized.includes('成立')||normalized.includes('哪年')||normalized.includes('建校')||normalized.includes('历史')||normalized.includes('校史')) facts.push(item.content[0]);
+  if(normalized.includes('学科')||normalized.includes('专业实力')||normalized.includes('优势学科')||normalized.includes('三海一核')) facts.push(item.content[3],item.content[4]);
+  if(!facts.length) return null;
+  return {html:`关于哈工程，这几条可以先记住：<ul>${facts.map(fact=>`<li>${escapeHtml(fact)}</li>`).join('')}</ul><em>这是一份面向新生的基础介绍，表述以学校官网最新信息为准。</em>`,hits:[{item,score:100}]};
+}
 function answer(question) {
+  const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
   const chunks=retrieve(question); if(!chunks.length||chunks[0].score<12) return {html:'这个问题暂时没有足够的知识库证据，我不想猜测。你可以换一种说法，或查看学校官网、本科生院、招生网或学院教学办公室的最新通知。',hits:[]};
   const topScore=chunks[0].score; const confidence=topScore>=45?'高':topScore>=24?'中':'待确认';
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
