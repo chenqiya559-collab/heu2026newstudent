@@ -492,7 +492,7 @@ export const timeline = [
 
 export const officialLinks = [
   { name: '学校官网', url: 'https://www.hrbeu.edu.cn/', desc: '学校公告与权威信息入口' },
-  { name: '本科生院', url: 'https://ugs.hrbeu.edu.cn/', desc: '本科教学、选课与教务通知' },
-  { name: '校团委', url: 'https://youth.hrbeu.edu.cn/', desc: '校园文化、学生组织与活动' },
-  { name: '招生网', url: 'https://zsb.hrbeu.edu.cn/', desc: '招生与录取相关信息' }
+  { name: '本科生院', url: 'http://ugs.hrbeu.edu.cn/', desc: '本科教学、选课与教务通知' },
+  { name: '校团委', url: 'http://youth.hrbeu.edu.cn/', desc: '校园文化、学生组织与活动' },
+  { name: '招生网', url: 'http://zsb.hrbeu.edu.cn/', desc: '招生与录取相关信息' }
 ];

@@ -95,7 +95,7 @@ app.innerHTML = `
       <div class="polish-tool"><form id="polish-form"><label for="notice-input">原始内容</label><textarea id="notice-input" required placeholder="例如：18、19公寓浴池下午四点到晚上十一点开，周二不开放。使用校园卡，具体以公告为准。"></textarea><button class="primary" type="submit">整理通知 <span>→</span></button></form><section id="polish-result" class="polish-result" hidden aria-live="polite"></section></div>
     </div></section>
 
-    <section class="sources section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow"><i></i> OFFICIAL CHANNELS</div><h2>认准官方信息入口</h2><p>关键政策、日期和流程，以这些渠道发布的信息为准。</p></div></div><div class="source-grid">${officialLinks.map((l,i)=>`<a href="${l.url}" target="_blank" rel="noopener"><span>0${i+1}</span><div><b>${l.name}</b><small>${l.desc}</small></div><i>↗</i></a>`).join('')}</div></div></section>
+    <section class="sources section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow"><i></i> OFFICIAL CHANNELS</div><h2>认准官方信息入口</h2><p>点击后在当前页面进入学校网站；部分校内子站加载较慢，请耐心等待。</p></div></div><div class="source-grid">${officialLinks.map((l,i)=>`<a href="${l.url}" title="进入${l.name}"><span>0${i+1}</span><div><b>${l.name}</b><small>${l.desc}</small><em>${l.url.replace(/^https?:\/\//,'')}</em></div><i>→</i></a>`).join('')}</div></div></section>
   </main>
   <footer><div class="shell"><div class="brand inverse"><span class="brand-mark">H</span><span>启航 HEU<small>2026 新生入学指南</small></span></div><p>学生团队整理 · 非学校官方网站<br>信息有误？欢迎帮助我们一起完善。</p><button id="feedback">提交纠错 / 使用反馈 ↗</button></div><div class="footline shell"><span>学生团队整理</span><span>愿你在这里，找到自己的航向。</span></div></footer>
   <dialog id="detail-dialog"><button class="dialog-close">×</button><div id="dialog-body"></div></dialog>
