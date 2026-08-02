@@ -306,6 +306,7 @@ export const guideItems = [
     summary: '手机和电脑优先连接 HEU-AUTO，并了解网页认证、宿舍有线网、VPN、设备下线和故障报修。',
     content: [
       '上网账号通常使用本人学号，密码通常与学校统一身份认证密码关联。首次登录、初始密码和密码重置方式以学校发放的账号说明为准，不要仅凭他人经验反复尝试身份证号码。',
+      '校园网参考收费为 40 元/月，可通过校园卡相关入口充值；网费账号通常填写本人学号。新生账号开通时间、实际资费和充值入口以学校当年通知及页面提示为准。',
       '如账号尚未开通，可在学校网上办事中心或网络信息相关服务中查找校园网上网账号开通入口。新生数据尚未同步时可能暂时无法办理，等待后重试或咨询信息服务部门。',
       '校园无线网络常用信号包括 HEU-AUTO 和 HEU-WLAN。HEU-AUTO 完成一次身份认证后通常可在覆盖区域自动连接；HEU-WLAN 一般通过浏览器认证页面登录，断开后可能需要再次认证。',
       '安卓连接 HEU-AUTO 时，常见配置为 PEAP 与 MSCHAPv2，身份填写学号、匿名身份留空。CA 证书和域名验证选项应按学校当前官方图示配置，不要把关闭证书验证的做法用于其他未知 Wi-Fi。',
@@ -320,13 +321,14 @@ export const guideItems = [
     ],
     sections: [
       { title: '最推荐', text: '手机和电脑优先使用 HEU-AUTO，完成一次正确配置后通常可以在教学楼、图书馆和公寓覆盖区域自动连接。' },
+      { title: '资费与账号', text: '参考网费 40 元/月，可使用校园卡充值，网费账号通常为本人学号；新生以学校通知为准。' },
       { title: '临时备用', text: 'HEU-WLAN 适合通过网页认证快速上网，但重连时可能需要重新打开认证页面。' },
       { title: '校外查资源', text: '使用学校发布的 HEU-VPN 客户端。当前学校服务推广平台入口为 https://fwtg.hrbeu.edu.cn/vpn_13516/list.htm。' },
       { title: '安全提醒', text: '统一身份认证密码不要告知他人；只连接拼写完全正确的校园 Wi-Fi，支付和账号操作不通过陌生认证页进行。' }
     ],
     media: [{ src: './assets/tools/heu-network-auto-preview.png', alt: 'HEU-AUTO 无线上网使用指南预览', caption: '联网图示 PDF 第 1 页预览，共 17 页' }],
     download: { href: './assets/downloads/heu-network-auto-guide.pdf', label: '下载 HEU-AUTO 联网图示 PDF', size: '约 1 MB · 17 页' },
-    source: 'HEU-AUTO 联网图示 PDF、学校网络信息服务入口与在校生经验', sourceUrl: 'https://fwtg.hrbeu.edu.cn/vpn_13516/list.htm', updated: '2026-08-02', keywords: '校园网 联网 WiFi WIFI 无线网 HEU-AUTO HEU-WLAN 学号 密码 统一身份认证 PEAP MSCHAPv2 EAP CA证书 安卓 iPhone 苹果 Windows macOS 笔记本 宿舍 有线网 PPPoE SRUN2 路由器 终端 在线设备 VPN 知网 图书馆 报修 82519114'
+    source: 'HEU-AUTO 联网图示 PDF、学校网络信息服务入口与在校生经验', sourceUrl: 'https://fwtg.hrbeu.edu.cn/vpn_13516/list.htm', updated: '2026-08-02', keywords: '校园网 联网 WiFi WIFI 无线网 HEU-AUTO HEU-WLAN 学号 网费账号 网络账号 40元 40元每月 40元一个月 网费 网络费 宽带费 上网费 校园卡充值 充网费 缴网费 密码 统一身份认证 PEAP MSCHAPv2 EAP CA证书 安卓 iPhone 苹果 Windows macOS 笔记本 宿舍 有线网 PPPoE SRUN2 路由器 终端 在线设备 VPN 知网 图书馆 报修 82519114'
   },
   {
     id: 'campus-delivery', category: 'life', title: '校园快递收寄指南', priority: '实用', verified: '经验信息；驿站位置和承运范围可能调整',
