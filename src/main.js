@@ -75,7 +75,7 @@ app.innerHTML = `
     </div></section>
 
     <section class="ask-section shell section" id="ask">
-      <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>它只根据本站整理的知识库回答，并把参考条目列出来。遇到未收录或可能变化的信息，会建议你去对应官方渠道确认。</p><div class="sample-title">大家常问</div><div class="chips"><button>宿舍是几人寝，有没有阳台？</button><button>洗浴中心几点营业？</button><button>宿舍会查寝吗？</button><button>报到要带哪些材料？</button></div><div class="popular-box"><b>高频问题自动汇总</b><span id="popular-questions">提问后会在本机匿名汇总，帮助后续补充知识库</span></div></div>
+      <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>它只根据本站整理的知识库回答，并把参考条目列出来。遇到未收录或可能变化的信息，会建议你去对应官方渠道确认。</p><div class="sample-title">大家常问</div><div class="chips"><button>国家助学贷款怎么办？</button><button>宿舍是几人寝，有没有阳台？</button><button>洗浴中心几点营业？</button><button>报到要带哪些材料？</button></div><div class="popular-box"><b>高频问题自动汇总</b><span id="popular-questions">提问后会在本机匿名汇总，帮助后续补充知识库</span></div></div>
       <div class="chat-card">
         <div class="chat-head"><div><span class="bot">H</span><b>启航助手</b><small><i></i> 本地 RAG · ${guideItems.length} 篇知识</small></div><button id="clear-chat" title="清空对话">↻</button></div>
         <div class="messages" id="messages"><div class="message bot-msg"><span class="bot">H</span><div>你好！我是启航助手 👋<br>你可以问我关于报到、选课、培养方案和校园生活的问题。<small>回答会附参考信息，请以最新官方通知为准。</small></div></div></div>
@@ -320,16 +320,30 @@ function unsafeRequestFallback(question) {
   const normalized=ragNormalize(question);
   const defensiveContext=/(防骗|反诈|预防|避免|识别|举报|报警|被骗|被盗|受害|求助|保护|安全吗|风险|怎么办|补救|找回|申诉|合法|合规)/.test(normalized);
   if(defensiveContext) return null;
-  const harmfulAction=/(怎么|如何|教程|步骤|方法|帮我|教我|制作|实施|操作|绕过|逃避|规避|隐藏|销毁|入侵|破解|盗取|骗取|伪造|套现|洗钱|下毒|伤害)/.test(question);
-  const harmfulTopic=/(诈骗|骗钱|盗窃|偷窃|抢劫|洗钱|套现|伪造证明|假证明|假材料|冒充老师|盗号|破解密码|入侵系统|绕过门禁|逃避查寝|逃避处分|毒品|管制刀具|爆炸物|伤人|杀人)/.test(normalized);
+  const harmfulAction=/(怎么|如何|教程|步骤|方法|帮我|教我|制作|实施|操作|绕过|逃避|规避|隐藏|销毁|入侵|破解|盗取|骗取|骗|伪造|套取|套现|洗钱|下毒|伤害)/.test(question);
+  const harmfulTopic=/(诈骗|骗钱|骗贷款|骗取贷款|套取贷款|冒领助学贷款|盗窃|偷窃|抢劫|洗钱|套现|伪造证明|假证明|假材料|冒充老师|盗号|破解密码|入侵系统|绕过门禁|逃避查寝|逃避处分|毒品|管制刀具|爆炸物|伤人|杀人)/.test(normalized);
   if(!harmfulAction||!harmfulTopic) return null;
   const safety=guideItems.find(item=>item.id==='anti-fraud');
   return {html:'这个请求涉及违法、伤害他人、欺骗或规避校园安全管理，我不能提供做法、步骤或帮助。可以换成合法方向来问，例如如何防骗、保护账号、补交真实材料、申诉处理，或联系辅导员、保卫部门和警方解决。<em>遇到正在发生的人身危险或财产损失，请立即报警并联系学校保卫部门。</em>',hits:safety?[{item:safety,score:100}]:[]};
+}
+function studentLoanDirectAnswer(question) {
+  const normalized=ragNormalize(question);
+  const loanTerms=['贷款','助贷','国家助贷','国助贷','学生贷款','生源地助学','校园地助学','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','缓交学费','贷款扣学费','贷款抵学费'];
+  if(!loanTerms.some(term=>normalized.includes(ragNormalize(term)))) return null;
+  const item=guideItems.find(entry=>entry.id==='student-loan-guide');
+  if(!item) return null;
+  const points=[];
+  if(/(回执|受理证明|证明)/.test(normalized)) points.push('办理生源地贷款后，请保存受理证明、回执或回执码，并按学校通知交由辅导员或资助部门确认。');
+  if(/(学费|缴费|不交|缓交|抵扣|扣学费|到账)/.test(normalized)) points.push('贷款额度覆盖的学费一般不要重复缴纳；是否暂缓缴费、到账后如何抵扣及差额如何补交，以学校财务规则和辅导员通知为准。');
+  if(/(首贷|续贷|申请|怎么办|怎么弄|流程|共同借款人)/.test(normalized)) points.push('生源地贷款通常在户籍所在地按当地承办机构要求申请；首贷、续贷和共同借款人材料可能不同，请以当地资助中心和当年政策为准。');
+  if(!points.length) points.push('国家助学贷款主要用于学费和住宿费，常见类型为生源地信用助学贷款和校园地国家助学贷款，同一学年不能同时申请两种。', '已办理生源地贷款的同学要保存受理证明或回执，到校后按通知完成学校确认。');
+  return {html:`可以，助学贷款这块我单独给你查：<ul>${points.map(point=>`<li>${escapeHtml(point)}</li>`).join('')}</ul><em>贷款额度、承办银行、申请时间和缴费结算方式可能调整，请以当年正式通知为准；拿不准时直接问辅导员。</em>`,hits:[{item,score:100}]};
 }
 function answer(question) {
   const unsafeAnswer=unsafeRequestFallback(question); if(unsafeAnswer) return unsafeAnswer;
   const otherSchoolAnswer=otherSchoolFallback(question); if(otherSchoolAnswer) return otherSchoolAnswer;
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
+  const loanAnswer=studentLoanDirectAnswer(question); if(loanAnswer) return loanAnswer;
   const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return guidanceFallback(question);
   const topScore=chunks[0].score; const confidence=topScore>=45?'高':topScore>=24?'中':'待确认';
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
