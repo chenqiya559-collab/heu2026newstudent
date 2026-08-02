@@ -70,13 +70,18 @@ app.innerHTML = `
     </div></section>
 
     <section class="ask-section shell section" id="ask">
-      <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>它只根据本站整理的知识库回答，并把参考条目列出来。遇到未收录或可能变化的信息，会建议你去对应官方渠道确认。</p><div class="sample-title">大家常问</div><div class="chips"><button>选课前要准备什么？</button><button>宿舍能用大功率电器吗？</button><button>怎么选择社团？</button><button>报到要带哪些材料？</button></div></div>
+      <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>它只根据本站整理的知识库回答，并把参考条目列出来。遇到未收录或可能变化的信息，会建议你去对应官方渠道确认。</p><div class="sample-title">大家常问</div><div class="chips"><button>宿舍是几人寝，有没有阳台？</button><button>洗浴中心几点营业？</button><button>宿舍会查寝吗？</button><button>报到要带哪些材料？</button></div><div class="popular-box"><b>高频问题自动汇总</b><span id="popular-questions">提问后会在本机匿名汇总，帮助后续补充知识库</span></div></div>
       <div class="chat-card">
         <div class="chat-head"><div><span class="bot">H</span><b>启航助手</b><small><i></i> 本地 RAG · ${guideItems.length} 篇知识</small></div><button id="clear-chat" title="清空对话">↻</button></div>
         <div class="messages" id="messages"><div class="message bot-msg"><span class="bot">H</span><div>你好！我是启航助手 👋<br>你可以问我关于报到、选课、培养方案和校园生活的问题。<small>回答会附参考信息，请以最新官方通知为准。</small></div></div></div>
         <form id="ask-form"><input id="question" autocomplete="off" placeholder="例如：新生报到需要带什么？" /><button type="submit">发送 ↑</button></form>
       </div>
     </section>
+
+    <section class="polish-section section" id="polish"><div class="shell polish-layout">
+      <div class="polish-copy"><div class="eyebrow"><i></i> NOTICE ORGANIZER</div><h2>把碎片通知，整理成可执行的信息</h2><p>粘贴班群公告、楼内通知或学长学姐经验。助手会提取关键事项和待办，保留不确定信息供你回看原文。</p><small>本地处理，不上传文本；涉及日期、费用和管理规定仍请核对原通知。</small></div>
+      <div class="polish-tool"><form id="polish-form"><label for="notice-input">原始内容</label><textarea id="notice-input" required placeholder="例如：18、19公寓浴池下午四点到晚上十一点开，周二不开放。使用校园卡，具体以公告为准。"></textarea><button class="primary" type="submit">整理通知 <span>→</span></button></form><section id="polish-result" class="polish-result" hidden aria-live="polite"></section></div>
+    </div></section>
 
     <section class="sources section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow"><i></i> OFFICIAL CHANNELS</div><h2>认准官方信息入口</h2><p>关键政策、日期和流程，以这些渠道发布的信息为准。</p></div></div><div class="source-grid">${officialLinks.map((l,i)=>`<a href="${l.url}" target="_blank" rel="noopener"><span>0${i+1}</span><div><b>${l.name}</b><small>${l.desc}</small></div><i>↗</i></a>`).join('')}</div></div></section>
   </main>
@@ -90,7 +95,7 @@ function renderGuides() {
   const list = currentCategory === 'all' ? guideItems : guideItems.filter(i => i.category === currentCategory);
   document.querySelector('#guide-grid').innerHTML = list.map((item, index) => {
     const cat = categories.find(c => c.id === item.category);
-    return `<article class="guide-card" style="--delay:${index*40}ms" data-id="${item.id}"><div class="card-top"><span class="cat" style="--c:${cat.color}">${cat.name}</span><span class="badge ${item.priority==='必看'?'hot':''}">${item.priority}</span></div><h3>${item.title}</h3><p>${item.summary}</p><div class="card-meta"><span>更新于 ${item.updated.slice(5).replace('-','/')}</span><button>阅读全文 →</button></div></article>`;
+    return `<a class="guide-card" href="./guide.html?id=${item.id}" style="--delay:${index*40}ms" data-id="${item.id}"><div class="card-top"><span class="cat" style="--c:${cat.color}">${cat.name}</span><span class="badge ${item.priority==='必看'?'hot':''}">${item.priority}</span></div><h3>${item.title}</h3><p>${item.summary}</p><div class="card-meta"><span>更新于 ${item.updated.slice(5).replace('-','/')}</span><span>阅读全文 →</span></div></a>`;
   }).join('');
   document.querySelectorAll('.guide-card').forEach(card => card.addEventListener('click', () => openGuide(card.dataset.id)));
 }
@@ -116,9 +121,7 @@ function openMap(id) {
 }
 
 function openGuide(id) {
-  const item = guideItems.find(i => i.id === id); const cat = categories.find(c => c.id === item.category);
-  document.querySelector('#dialog-body').innerHTML = `<span class="cat" style="--c:${cat.color}">${cat.name}</span><h2>${item.title}</h2><p class="lead">${item.summary}</p><div class="verify">信息状态：<b>${item.verified}</b></div>${item.media ? `<div class="article-media ${item.media.length === 1 ? 'single' : ''}">${item.media.map(media=>`<figure><img src="${media.src}" alt="${media.alt}" loading="lazy"><figcaption>${media.caption}</figcaption></figure>`).join('')}</div>` : ''}${item.sections ? `<div class="article-sections">${item.sections.map(section=>`<section><h3>${section.title}</h3><p>${section.text}</p></section>`).join('')}</div>` : ''}${item.download ? `<a class="resource-download" href="${item.download.href}" download><span>↓</span><div><b>${item.download.label}</b><small>${item.download.size}</small></div><i>立即下载</i></a>` : ''}<ol>${item.content.map(c=>`<li>${c}</li>`).join('')}</ol><div class="citation"><small>参考来源</small><b>${item.source}</b>${item.sourceUrl?`<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 ↗</a>`:''}<span>整理更新时间：${item.updated}</span></div>`;
-  document.querySelector('#detail-dialog').showModal();
+  window.location.href = `./guide.html?id=${encodeURIComponent(id)}`;
 }
 
 document.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('click', () => { currentCategory=b.dataset.filter; document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b)); renderGuides(); }));
@@ -131,6 +134,7 @@ document.querySelector('#map-search-clear').addEventListener('click', () => { co
 document.querySelectorAll('.map-suggestions button').forEach(button => button.addEventListener('click', () => { const input=document.querySelector('#map-query'); input.value=button.textContent; renderMaps(button.textContent); }));
 document.querySelector('#feedback').addEventListener('click',()=>document.querySelector('#feedback-dialog').showModal());
 document.querySelector('#fake-submit').addEventListener('click',()=>{alert('感谢反馈！演示版已记录交互；正式部署请接入真实表单。');document.querySelector('#feedback-dialog').close()});
+document.querySelector('#polish-form').addEventListener('submit', event => { event.preventDefault(); renderPolishedNotice(document.querySelector('#notice-input').value); });
 
 const stopWords = new Set('的了是我你要有吗呢啊什么怎么如何一下可以能不能请问关于需要应该学校新生大学'.split(''));
 function tokens(text) { return [...new Set((text.toLowerCase().match(/[\u4e00-\u9fa5]{1,4}|[a-z0-9]+/g)||[]).flatMap(x=>x.length>2&&/[\u4e00-\u9fa5]/.test(x)?[x,...x.split('')]:[x]).filter(x=>!stopWords.has(x)))]; }
@@ -156,52 +160,119 @@ document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click'
 document.querySelector('#clear-chat').addEventListener('click',()=>document.querySelector('#messages').innerHTML='<div class="message bot-msg"><span class="bot">H</span><div>对话已清空。还有什么想了解的？</div></div>');
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.querySelector('#ask').scrollIntoView({behavior:'smooth'});document.querySelector('#question').focus()}});
 // Local RAG engine: chunk -> retrieve -> grounded answer.
-const ragStopWords = new Set(['的','了','是','我','你','要','有','吗','呢','啊','什么','怎么','如何','一下','可以','能不能','请问','关于','需要','应该','学校','新生','大学','帮我','问题','完全','没有','收录']);
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+function polishNotice(text) {
+  const cleaned=String(text||'').replace(/\s+/g,' ').trim();
+  const sentences=cleaned.split(/(?<=[。！？；;])/).map(sentence=>sentence.trim()).filter(Boolean);
+  const topic=/(浴池|洗浴|洗澡)/.test(cleaned)?'洗浴安排':/(宿舍|公寓|寝室)/.test(cleaned)?'宿舍通知':/(报到|报道)/.test(cleaned)?'新生报到':/(选课|课表)/.test(cleaned)?'选课提醒':'校园通知';
+  const keyLines=sentences.filter(sentence=>/(时间|点|周.|日期|地点|开放|休息|费用|校园卡|需|请|禁止|安排|通知)/.test(sentence)).slice(0,5);
+  const actions=sentences.filter(sentence=>/(请|需|带|准备|核对|查看|联系|遵守|不要)/.test(sentence)).slice(0,3);
+  return {topic,summary:sentences.slice(0,2).join(' ')||cleaned,keyLines:keyLines.length?keyLines:sentences.slice(0,4),actions};
+}
+function renderPolishedNotice(text) {
+  const result=document.querySelector('#polish-result'); const data=polishNotice(text); const actionHtml=data.actions.length?`<div><small>建议操作</small><ul>${data.actions.map(line=>`<li>${escapeHtml(line)}</li>`).join('')}</ul></div>`:'<div><small>建议操作</small><p>请保留原通知，并核对发布部门、日期和适用范围。</p></div>';
+  result.hidden=false; result.innerHTML=`<div class="polish-result-head"><span>整理结果</span><button type="button" id="copy-polished" title="复制整理结果">复制</button></div><h3>${escapeHtml(data.topic)}</h3><p>${escapeHtml(data.summary)}</p><div class="polish-points"><div><small>关键信息</small><ul>${data.keyLines.map(line=>`<li>${escapeHtml(line)}</li>`).join('')}</ul></div>${actionHtml}</div><em>自动整理不替代原始通知；有日期、费用或管理规则时请回看来源。</em>`;
+  document.querySelector('#copy-polished').addEventListener('click', async () => { const copyText=`${data.topic}\n${data.summary}\n关键信息：\n${data.keyLines.map(line=>`- ${line}`).join('\n')}\n建议操作：\n${data.actions.map(line=>`- ${line}`).join('\n')}`; try { await navigator.clipboard.writeText(copyText); document.querySelector('#copy-polished').textContent='已复制'; } catch (_) { document.querySelector('#copy-polished').textContent='请手动复制'; } });
+}
+const ragStopWords = new Set(['的','了','是','我','你','要','有','吗','呢','啊','什么','怎么','如何','一下','可以','能不能','请问','关于','需要','应该','学校','新生','大学','帮我','问题','完全','没有','收录','一下','一下子','的话','是不是','有没有','了解','知道','告诉','想问','请教','哈工程','哈尔滨工程大学','heu']);
 const ragSynonymGroups = [
-  ['工科数学分析','高数','数学分析','数分'], ['移动校园','校园app','校园 APP','缴费','校园卡充值'],
-  ['校园网','wifi','无线网','网络','HEU-AUTO','HEU-WLAN'], ['快递','邮寄','驿站','取件'], ['公交','校车','接站'],
-  ['宿舍','公寓','寝室'], ['PPT','模板','答辩','汇报'], ['VPN','校外访问','内网'],
-  ['助学贷款','贷款回执','受理证明'], ['浴池','洗澡','洗浴']
+  ['报到','报道','到校','入学','现场报到','迎新'], ['材料','证件','通知书','档案','团关系','党关系','照片','绿色通道'],
+  ['路线','交通','怎么去','到校路线','车站','机场','地铁','打车','接站'], ['哈尔滨站','哈站'], ['哈尔滨西站','哈西','西站'], ['太平机场','哈尔滨太平国际机场','机场'],
+  ['选课','抢课','退课','补选','课表','教务系统'], ['培养方案','培养计划','毕业要求','学分','先修','转专业','推免'],
+  ['工科数学分析','高数','数学分析','数分'], ['线性代数','线代'], ['大学英语','英语一'], ['军事技能训练','军训'],
+  ['移动校园','校园app','校园 APP','HEU校园','缴费','校园卡充值','财务服务'],
+  ['校园卡','饭卡','校园码','电子校园卡','充值','余额'], ['校园网','wifi','wi-fi','无线网','网络','联网','HEU-AUTO','HEU-WLAN'], ['VPN','校外访问','内网','知网','图书馆数据库'],
+  ['宿舍','公寓','寝室','宿寝','床位'], ['洗澡','洗浴','浴池','公共浴池','澡堂'], ['电器','大功率','用电','插排','违规电器'],
+  ['快递','邮寄','驿站','取件','收件','寄行李','行李'], ['公交','校车','小公交','接站'],
+  ['PPT','模板','答辩','汇报','演示'], ['助学贷款','贷款回执','受理证明','助学金','资助'], ['社团','学生组织','学生会','招新','百团'],
+  ['诈骗','防骗','骗局','刷单','陌生链接','冒充老师','缴费诈骗']
 ];
-function ragNormalize(value) { return String(value || '').toLowerCase().replace(/[“”‘’、，。！？：；（）【】《》\s]/g,''); }
+const ragRelations = [
+  { triggers:['校园卡','饭卡'], expands:['用途','食堂','吃饭','充值','余额','宿舍电费','缴电费','洗浴','浴池','卡槽','放水','扣费','挂失','校园码'] },
+  { triggers:['洗浴','洗澡','浴池'], expands:['校园卡','卡槽','读卡器','放水','扣费','计费','营业时间'] },
+  { triggers:['电费','缴电费'], expands:['校园卡','移动校园','充值','公寓','房间号','缴费'] },
+  { triggers:['充值','充钱'], expands:['校园卡','移动校园','余额','到账','重复支付'] },
+  { triggers:['丢了','丢失','遗失'], expands:['校园卡','挂失','补卡','余额安全'] },
+  { triggers:['报到','报道','到校'], expands:['材料','通知书','身份证','档案','照片','绿色通道','现场','迎新'] },
+  { triggers:['路线','怎么去','机场','火车站'], expands:['地铁','工程大学站','哈尔滨站','哈尔滨西站','太平机场','打车','接站'] },
+  { triggers:['选课','课表'], expands:['教务系统','培养方案','必修','选修','学分','退补选','时间冲突'] },
+  { triggers:['宿舍','寝室','公寓'], expands:['床位','上床下桌','卫生间','空调','供暖','用电','洗浴','报修','门禁'] },
+  { triggers:['校园网','wifi','联网'], expands:['HEU-AUTO','HEU-WLAN','学号','统一身份认证','PEAP','VPN','终端','报修'] },
+  { triggers:['缴费','支付','学费'], expands:['移动校园','财务服务','订单','扣款','官方入口','验证码','诈骗'] }
+];
+const ragIntentProfiles = [
+  { id:'howto', label:'操作步骤', triggers:['怎么','如何','步骤','流程','操作','怎么办','咋办'], boosts:['流程','步骤','先','再','登录','查询','确认','联系','办理','入口'] },
+  { id:'checklist', label:'清单', triggers:['带什么','准备','材料','清单','需要带','要带','必备'], boosts:['材料','准备','证件','通知书','身份证','照片','档案','清单'] },
+  { id:'route', label:'路线', triggers:['怎么去','路线','到校','机场','火车站','地铁','打车','接站'], boosts:['路线','地铁','工程大学站','机场','车站','打车','接站','地址'] },
+  { id:'risk', label:'风险提醒', triggers:['能不能','可以吗','安全吗','被骗','诈骗','丢了','异常','失败','扣款','陌生'], boosts:['不要','谨防','核对','官方','挂失','异常','保存','联系','不要重复'] },
+  { id:'time', label:'时间安排', triggers:['什么时候','几点','时间','开放','报到时间','营业时间','日期'], boosts:['时间','日期','开放','营业','通知','当年','最新'] },
+  { id:'download', label:'资源下载', triggers:['下载','pdf','ppt','模板','文件'], boosts:['下载','PDF','PPT','模板','压缩包','文件'] }
+];
+function ragNormalize(value) { return String(value || '').toLowerCase().replace(/[“”‘’、，。！？：；（）【】《》\s\-_/]/g,''); }
 function ragTokens(value) {
-  const normalized=ragNormalize(value); const pieces=normalized.match(/[\u4e00-\u9fa5]{1,6}|[a-z0-9]+/g)||[]; const result=[];
-  pieces.forEach(piece=>{ if(!ragStopWords.has(piece)) result.push(piece); if(piece.length>2&&/[\u4e00-\u9fa5]/.test(piece)){ for(let i=0;i<piece.length-1;i++) result.push(piece.slice(i,i+2)); } });
+  const normalized=ragNormalize(value); const pieces=normalized.match(/[\u4e00-\u9fa5]+|[a-z0-9]+/g)||[]; const result=[];
+  pieces.forEach(piece=>{ if(!ragStopWords.has(piece)&&piece.length<=10) result.push(piece); if(piece.length>1&&/[\u4e00-\u9fa5]/.test(piece)){ for(let size=2;size<=4;size++){for(let i=0;i+size<=piece.length;i++) result.push(piece.slice(i,i+size));} } });
   return [...new Set(result.filter(token=>(token.length>1||/[a-z0-9]/.test(token))&&!ragStopWords.has(token)))];
+}
+function detectIntent(query) {
+  const normalized=ragNormalize(query);
+  const hits=ragIntentProfiles.map(profile=>({profile,score:profile.triggers.reduce((sum,trigger)=>sum+(normalized.includes(ragNormalize(trigger))?1:0),0)})).filter(hit=>hit.score>0).sort((a,b)=>b.score-a.score);
+  return hits[0]?.profile || { id:'general', label:'综合检索', boosts:[] };
 }
 function ragExpand(tokens) {
   const expanded=new Set(tokens); const joined=tokens.join('');
-  ragSynonymGroups.forEach(group=>{ if(group.some(term=>joined.includes(ragNormalize(term))||tokens.some(token=>ragNormalize(term).includes(token)))) group.forEach(term=>expanded.add(ragNormalize(term))); });
+  ragSynonymGroups.forEach(group=>{
+    const matchesGroup=group.some(term=>{
+      const normalizedTerm=ragNormalize(term);
+      return joined.includes(normalizedTerm)||tokens.some(token=>normalizedTerm.includes(token)||token.includes(normalizedTerm));
+    });
+    if(matchesGroup) group.forEach(term=>expanded.add(ragNormalize(term)));
+  });
+  ragRelations.forEach(relation=>{if(relation.triggers.some(term=>joined.includes(ragNormalize(term)))) relation.expands.forEach(term=>expanded.add(ragNormalize(term)));});
   return [...expanded];
 }
 const ragChunks = guideItems.flatMap(item => {
-  const chunks=[{text:item.summary,type:'摘要'}];
-  item.content.forEach((text,index)=>chunks.push({text,type:`要点 ${index+1}`}));
-  (item.sections||[]).forEach(section=>chunks.push({text:`${section.title}：${section.text}`,type:section.title}));
-  return chunks.map(chunk=>({item,...chunk,hay:ragNormalize(`${item.title} ${item.keywords} ${chunk.text}`)}));
+  const category=categories.find(entry=>entry.id===item.category);
+  const chunks=[{text:item.summary,type:'摘要',order:0}];
+  item.content.forEach((text,index)=>chunks.push({text,type:`要点 ${index+1}`,order:index+1}));
+  (item.sections||[]).forEach((section,index)=>chunks.push({text:`${section.title}：${section.text}`,type:section.title,order:100+index}));
+  return chunks.map(chunk=>({item,category,...chunk,titleHay:ragNormalize(item.title),keywordHay:ragNormalize(`${item.keywords} ${category?.name || ''} ${item.priority} ${item.verified}`),textHay:ragNormalize(chunk.text)}));
 });
 function retrieve(query) {
-  const normalized=ragNormalize(query); const terms=ragExpand(ragTokens(query));
-  const scored=ragChunks.map(chunk=>{ let score=0; if(normalized&&ragNormalize(chunk.item.title).includes(normalized)) score+=30; if(normalized&&chunk.hay.includes(normalized)) score+=12;
-    terms.forEach(term=>{if(chunk.hay.includes(term)) score += term.length>=4 ? 7 : 3; if(ragNormalize(chunk.item.title).includes(term)) score+=8; if(ragNormalize(chunk.item.keywords).includes(term)) score+=4;});
+  const normalized=ragNormalize(query); const intent=detectIntent(query); const baseTerms=ragTokens(query); const baseSet=new Set(baseTerms); const terms=ragExpand(baseTerms); const phraseTerms=[]; for(let size=4;size<=7;size++){for(let i=0;i+size<=normalized.length;i++){const phrase=normalized.slice(i,i+size);if(/[\u4e00-\u9fa5]/.test(phrase)) phraseTerms.push(phrase);}}
+  const scored=ragChunks.map(chunk=>{ let score=0; if(normalized&&chunk.titleHay.includes(normalized)) score+=30; if(normalized&&chunk.textHay.includes(normalized)) score+=20;
+    if((normalized.includes('用途')||normalized.includes('功能')||normalized.includes('有哪些'))&&chunk.type==='摘要') score+=18;
+    if((normalized.includes('丢了')||normalized.includes('丢卡')||normalized.includes('遗失'))&&chunk.textHay.includes('挂失')) score+=32;
+    if(intent.id==='time'&&(/[0-9]{1,2}[:：][0-9]{2}/.test(chunk.text)||chunk.type.includes('时间'))) score+=20;
+    intent.boosts.forEach(term=>{const normalizedBoost=ragNormalize(term); if(chunk.textHay.includes(normalizedBoost)) score+=5; if(chunk.keywordHay.includes(normalizedBoost)) score+=3;});
+    phraseTerms.forEach(phrase=>{if(chunk.textHay.includes(phrase)) score+=14; if(chunk.titleHay.includes(phrase)) score+=8;});
+    terms.forEach(term=>{const weight=baseSet.has(term)?1:.32; if(chunk.textHay.includes(term)) score+=(term.length>=4?8:4)*weight; if(chunk.titleHay.includes(term)) score+=9*weight; if(chunk.keywordHay.includes(term)) score+=1.5*weight;});
+    if(chunk.type==='摘要') score+=1.5;
+    if(chunk.item.priority==='必看') score+=1.2;
     return {...chunk,score}; }).filter(chunk=>chunk.score>0).sort((a,b)=>b.score-a.score);
-  const selected=[]; const perItem=new Map(); scored.forEach(chunk=>{const count=perItem.get(chunk.item.id)||0; if(count<2){selected.push(chunk);perItem.set(chunk.item.id,count+1);}});
-  return selected.slice(0,6);
+  const selected=[]; const perItem=new Map(); const seenText=new Set();
+  scored.forEach(chunk=>{const count=perItem.get(chunk.item.id)||0; const fingerprint=chunk.textHay.slice(0,42); if(count<3&&!seenText.has(fingerprint)){selected.push(chunk);perItem.set(chunk.item.id,count+1);seenText.add(fingerprint);}});
+  return selected.slice(0,8).map(chunk=>({...chunk,intent}));
 }
 function answer(question) {
-  const chunks=retrieve(question); if(!chunks.length||chunks[0].score<10) return {html:'这个问题暂时没有足够的知识库证据，我不想猜测。你可以换一种说法，或查看学校官网、本科生院和学院教学办公室的最新通知。',hits:[]};
-  const topScore=chunks[0].score; const confidence=topScore>=35?'高':topScore>=18?'中':'待确认';
+  const chunks=retrieve(question); if(!chunks.length||chunks[0].score<12) return {html:'这个问题暂时没有足够的知识库证据，我不想猜测。你可以换一种说法，或查看学校官网、本科生院、招生网或学院教学办公室的最新通知。',hits:[]};
+  const topScore=chunks[0].score; const confidence=topScore>=45?'高':topScore>=24?'中':'待确认';
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
-  const evidence=chunks.slice(0,5).map(chunk=>`<li>${chunk.text}</li>`).join('');
-  const downloads=docs.filter(item=>item.download).map(item=>`<a class="chat-download" href="${item.download.href}" download>↓ ${item.download.label}（${item.download.size}）</a>`).join('');
-  const status=[...new Set(docs.map(item=>item.verified))].join('；');
-  return {html:`我从 ${docs.slice(0,2).map(item=>`“${item.title}”`).join('、')} 中检索到相关信息：<ul>${evidence}</ul>${downloads}<em>检索置信度：${confidence}。信息状态：${status}。涉及账号、支付、日期和管理政策时，请以学校最新通知为准。</em>`,hits:docs.map(item=>({item,score:chunks.filter(chunk=>chunk.item.id===item.id).reduce((sum,chunk)=>sum+chunk.score,0)}))};
+  const evidenceChunks=chunks.filter((chunk,index)=>index===0||chunk.score>=Math.max(10,chunks[0].score*.25)).slice(0,6); const evidence=evidenceChunks.map(chunk=>`<li><b>${escapeHtml(chunk.item.title)}｜${escapeHtml(chunk.type)}</b>：${escapeHtml(chunk.text)}</li>`).join('');
+  const evidenceDocs=[...new Set(evidenceChunks.map(chunk=>chunk.item.id))]; const citedDocs=docs.filter(item=>evidenceDocs.includes(item.id));
+  const downloads=citedDocs.filter(item=>item.download).map(item=>`<a class="chat-download" href="${item.download.href}" download>↓ ${item.download.label}（${item.download.size}）</a>`).join('');
+  const status=[...new Set(citedDocs.map(item=>item.verified))].join('；');
+  const sourceList=citedDocs.slice(0,3).map(item=>`“${escapeHtml(item.title)}”`).join('、');
+  const intentLabel=chunks[0].intent?.label || '综合检索';
+  return {html:`我按“${intentLabel}”理解你的问题，并从 ${sourceList} 中检索到这些依据：<ul>${evidence}</ul>${downloads}<em>检索置信度：${confidence}。信息状态：${escapeHtml(status)}。涉及账号、支付、日期、路线和管理政策时，请以学校最新通知及现场标识为准。</em>`,hits:citedDocs.map(item=>({item,score:chunks.filter(chunk=>chunk.item.id===item.id).reduce((sum,chunk)=>sum+chunk.score,0)}))};
 }
 function saveQuestionStat(question) { try { const key='heu-rag-question-stats'; const stats=JSON.parse(localStorage.getItem(key)||'{}'); const normalized=ragNormalize(question).slice(0,40); if(normalized) stats[normalized]=(stats[normalized]||0)+1; localStorage.setItem(key,JSON.stringify(stats)); } catch (_) {} }
+function renderPopularQuestions() { try { const stats=JSON.parse(localStorage.getItem('heu-rag-question-stats')||'{}'); const entries=Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,3); const target=document.querySelector('#popular-questions'); if(target) target.innerHTML=entries.length?entries.map(([question,count])=>`<button data-popular-question="${escapeHtml(question)}">${escapeHtml(question)} <small>${count} 次</small></button>`).join(''):'提问后会在本机匿名汇总，帮助后续补充知识库'; target?.querySelectorAll('[data-popular-question]').forEach(button=>button.addEventListener('click',()=>submitQuestion(button.dataset.popularQuestion))); } catch (_) {} }
 function submitQuestion(q) {
-  if(!q.trim()) return; saveQuestionStat(q); const box=document.querySelector('#messages'); box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${q.replace(/[<>]/g,'')}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
+  if(!q.trim()) return; saveQuestionStat(q); renderPopularQuestions(); const box=document.querySelector('#messages'); box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${escapeHtml(q)}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
   setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=answer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;},420);
 }
 renderGuides();
+renderPopularQuestions();
 export { retrieve, answer };
 renderMaps();
