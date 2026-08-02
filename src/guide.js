@@ -6,7 +6,7 @@ const item = guideItems.find(guide => guide.id === params.get('id'));
 
 function mediaHtml(media = []) {
   if (!media.length) return '';
-  return `<div class="detail-media ${media.length === 1 ? 'single' : ''}">${media.map(entry => `<figure><a href="${entry.src}" target="_blank" rel="noopener"><img src="${entry.src}" alt="${entry.alt}" loading="lazy"></a><figcaption>${entry.caption}</figcaption></figure>`).join('')}</div>`;
+  return `<section class="detail-gallery"><div class="detail-section-heading"><div><small>IMAGE REFERENCE</small><h2>相关图片</h2></div><p>点击图片查看清晰原图</p></div><div class="detail-media ${media.length === 1 ? 'single' : ''}">${media.map((entry,index) => `<figure><a href="${entry.src}" target="_blank" rel="noopener"><img src="${entry.src}" alt="${entry.alt}" loading="lazy"><span>查看原图 ↗</span></a><figcaption><b>${String(index+1).padStart(2,'0')}</b>${entry.caption}</figcaption></figure>`).join('')}</div></section>`;
 }
 
 if (!item) {
@@ -23,8 +23,8 @@ if (!item) {
       <article class="detail-article">
         <div class="detail-breadcrumb"><a href="./index.html">首页</a><span>/</span><a href="./index.html#guide">新生指南</a><span>/</span><b>${category.name}</b></div>
         <div class="detail-hero"><span class="cat" style="--c:${category.color}">${category.name}</span><h1>${item.title}</h1><p>${item.summary}</p><div><span>信息状态：${item.verified}</span></div></div>
-        ${mediaHtml(item.media)}
         ${item.sections ? `<section class="detail-keypoints"><h2>先看重点</h2><div>${item.sections.map(section => `<article><h3>${section.title}</h3><p>${section.text}</p></article>`).join('')}</div></section>` : ''}
+        ${mediaHtml(item.media)}
         ${item.download ? `<a class="detail-download" href="${item.download.href}" download><span>↓</span><div><b>${item.download.label}</b><small>${item.download.size}</small></div><i>下载文件</i></a>` : ''}
         <section class="detail-content"><h2>完整说明</h2><ol>${item.content.map((paragraph, index) => `<li><span>${String(index + 1).padStart(2, '0')}</span><p>${paragraph}</p></li>`).join('')}</ol></section>
         <section class="detail-source"><div><small>参考来源</small><b>${item.source}</b></div>${item.sourceUrl ? `<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 ↗</a>` : ''}</section>

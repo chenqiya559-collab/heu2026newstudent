@@ -12,6 +12,13 @@ const mapResources = [
   { id: 'colleges', title: '学院名称与代码', tag: '学院', image: './assets/maps/college-names.jpg', desc: '学院代码与学院名称快速对照', keywords: '学院代码 学院名称 学院 名称 代码 船舶 航建 动力 智能 水声 计算机 软件 保密 机电 信通 经管 材化 外语 人文 核 体育 马克思 数学 物理' }
 ];
 
+const quickQuestions = [
+  { label: '住宿', questions: ['宿舍是几人寝？', '宿舍怎么交电费？', '洗衣和吹风怎么收费？'] },
+  { label: '网络缴费', questions: ['校园网怎么连接？', '校园网怎么缴费？', '助学贷款怎么抵学费？'] },
+  { label: '购物吃饭', questions: ['校内去哪里买生活用品？', '学校有哪些食堂？', '外卖能送到宿舍楼下吗？'] },
+  { label: '出行学习', questions: ['校园小公交怎么坐？', '教材和二手书在哪里买？', '打印和借书去哪里？'] }
+];
+
 app.innerHTML = `
   <div class="notice"><span>信息提示</span> 本站为学生团队整理，具体安排请以学校、学院 2026 年官方通知为准。</div>
   <header class="nav shell">
@@ -75,7 +82,7 @@ app.innerHTML = `
     </div></section>
 
     <section class="ask-section shell section" id="ask">
-      <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>它只根据本站整理的知识库回答，并把参考条目列出来。遇到未收录或可能变化的信息，会建议你去对应官方渠道确认。</p><div class="sample-title">大家常问</div><div class="chips"><button>国家助学贷款怎么办？</button><button>宿舍是几人寝，有没有阳台？</button><button>洗浴中心几点营业？</button><button>报到要带哪些材料？</button></div><div class="popular-box"><b>高频问题自动汇总</b><span id="popular-questions">提问后会在本机匿名汇总，帮助后续补充知识库</span></div></div>
+      <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>从高频主题里直接找，也可以输入自己的问题。回答会附对应帖子，涉及政策和费用时仍需核对学校通知。</p><div class="question-index">${quickQuestions.map((group,index)=>`<section class="question-group"><div><span>0${index+1}</span><b>${group.label}</b></div>${group.questions.map(question=>`<button type="button" data-quick-question="${question}">${question}<span>→</span></button>`).join('')}</section>`).join('')}</div><div class="popular-box"><b>本机高频提问</b><span id="popular-questions">提问后会在本机匿名汇总，帮助后续补充知识库</span></div></div>
       <div class="chat-card">
         <div class="chat-head"><div><span class="bot">H</span><b>启航助手</b><small><i></i> 本地 RAG · ${guideItems.length} 篇知识</small></div><button id="clear-chat" title="清空对话">↻</button></div>
         <div class="messages" id="messages"><div class="message bot-msg"><span class="bot">H</span><div>你好！我是启航助手 👋<br>你可以问我关于报到、选课、培养方案和校园生活的问题。<small>回答会附参考信息，请以最新官方通知为准。</small></div></div></div>
@@ -162,7 +169,7 @@ function legacySubmitQuestion(q) {
   setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=legacyAnswer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${res.hits.length?`<div class="refs"><small>参考条目</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openGuide(b.dataset.open));box.scrollTop=box.scrollHeight;},550);
 }
 document.querySelector('#ask-form').addEventListener('submit',e=>{e.preventDefault();const input=document.querySelector('#question');submitQuestion(input.value);input.value=''});
-document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click',()=>submitQuestion(b.textContent)));
+document.querySelectorAll('[data-quick-question]').forEach(button=>button.addEventListener('click',()=>submitQuestion(button.dataset.quickQuestion)));
 document.querySelector('#clear-chat').addEventListener('click',()=>document.querySelector('#messages').innerHTML='<div class="message bot-msg"><span class="bot">H</span><div>对话已清空。还有什么想了解的？</div></div>');
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.querySelector('#ask').scrollIntoView({behavior:'smooth'});document.querySelector('#question').focus()}});
 // Local RAG engine: chunk -> retrieve -> grounded answer.
