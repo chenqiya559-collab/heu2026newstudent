@@ -1,0 +1,80 @@
+export const categories = [
+  { id: 'arrival', name: '入学报到', icon: '路线', color: '#ff7a45' },
+  { id: 'study', name: '选课与学习', icon: '课表', color: '#246bfd' },
+  { id: 'plan', name: '培养方案', icon: '学业', color: '#7656d6' },
+  { id: 'life', name: '校园生活', icon: '生活', color: '#12a57a' },
+  { id: 'clubs', name: '社团活动', icon: '社团', color: '#e24d75' },
+  { id: 'safety', name: '安全防骗', icon: '安全', color: '#d59616' }
+];
+
+export const guideItems = [
+  {
+    id: 'arrival-list', category: 'arrival', title: '报到材料清单', priority: '必看', verified: '待录取通知书核验',
+    summary: '把证件、录取材料与个人生活用品分开整理，出发前逐项确认。',
+    content: ['录取通知书与通知书内要求携带的全部材料', '本人有效身份证件及必要复印件', '党团组织关系、个人档案等请严格按通知书要求办理', '近期免冠证件照可准备电子版和少量纸质版', '家庭经济困难学生提前关注绿色通道与资助说明'],
+    source: '随录取通知书寄送的《新生入学须知》', sourceUrl: 'https://www.hrbeu.edu.cn/', updated: '2026-08-01', keywords: '报道 报到 材料 证件 通知书 档案 团关系 党关系 照片 绿色通道'
+  },
+  {
+    id: 'arrival-route', category: 'arrival', title: '到校路线与校门', priority: '实用', verified: '经验信息',
+    summary: '哈尔滨工程大学主校区位于南岗区南通大街 145 号；开学接站安排以官方通知为准。',
+    content: ['出发前在学校迎新系统或官方通知中确认报到校门和时间', '不要轻信车站内主动搭讪并声称代办报到、缴费或住宿的人员', '打车时使用正规平台，目的地填写学校官方通知指定入口', '大件行李提前做好姓名和联系方式标识'],
+    source: '哈尔滨工程大学官网', sourceUrl: 'https://www.hrbeu.edu.cn/', updated: '2026-08-01', keywords: '地址 校门 路线 车站 接站 打车 南岗 南通大街'
+  },
+  {
+    id: 'course-process', category: 'study', title: '第一次选课怎么做', priority: '必看', verified: '流程参考',
+    summary: '先读本专业培养方案，再根据教务系统开放时间完成选课；具体轮次和限制每学期可能变化。',
+    content: ['登录教务相关系统，先核对个人信息和本学期推荐课表', '查看培养方案中的必修、限选、任选及学分要求', '按学校公布的选课轮次操作，留意容量、先修课程与时间冲突', '选课后再次核对最终课表，不以“提交过”代替“选课成功”', '退补选、重修、免修等特殊事项咨询学院教务办公室'],
+    source: '本科生院通知与所在学院教学办公室', sourceUrl: 'https://ugs.hrbeu.edu.cn/', updated: '2026-08-01', keywords: '选课 教务系统 抢课 退课 补选 课表 必修 选修 学分'
+  },
+  {
+    id: 'study-tools', category: 'study', title: '大学学习工具箱', priority: '经验', verified: '学长学姐经验',
+    summary: '课表、DDL、文件和复习资料从第一周开始统一管理，比考前突击更可靠。',
+    content: ['用日历记录考试、作业、实验报告和报名截止日期', '按课程建立文件夹，保留教学大纲、课件与自己的错题', '遇到听不懂的内容优先问老师、助教或同学，不要拖到期末', '合理使用 AI 辅助理解与检查，但不要代写作业或伪造实验数据'],
+    source: '在校生经验整理', sourceUrl: '', updated: '2026-08-01', keywords: '学习 方法 期末 挂科 作业 实验 AI 复习'
+  },
+  {
+    id: 'training-plan', category: 'plan', title: '怎么看懂培养方案', priority: '必看', verified: '通用说明',
+    summary: '培养方案是毕业要求的“地图”，专业不同、年级不同，不能直接套用他人的方案。',
+    content: ['确认方案对应“2026 级 + 你的专业（类）”', '重点看毕业总学分、各课程模块学分、实践环节与先修关系', '关注专业分流、转专业、推免等事项可能涉及的成绩条件', '每学期用已修课程对照方案自查，疑问以学院教学办公室解释为准'],
+    source: '所在学院发布的 2026 级本科培养方案', sourceUrl: 'https://ugs.hrbeu.edu.cn/', updated: '2026-08-01', keywords: '培养方案 毕业 学分 专业 分流 转专业 推免 先修'
+  },
+  {
+    id: 'dorm-life', category: 'life', title: '住宿与生活准备', priority: '实用', verified: '需以宿舍通知为准',
+    summary: '宿舍配置和管理要求以当年通知为准；哈尔滨秋冬降温快，衣物可分批准备。',
+    content: ['不要提前购买无法确认尺寸的床帘、床垫等大件用品', '违规电器范围与用电要求以公寓管理规定为准', '重要证件和贵重物品妥善保管，离寝及时锁门', '常用药按个人需要少量准备，处方药遵医嘱', '开学季昼夜温差较大，关注天气预报并准备外套'],
+    source: '学校公寓通知与在校生经验', sourceUrl: 'https://www.hrbeu.edu.cn/', updated: '2026-08-01', keywords: '宿舍 寝室 床 尺寸 电器 空调 洗澡 衣服 天气 冬天'
+  },
+  {
+    id: 'canteen-card', category: 'life', title: '吃饭、校园卡与网络', priority: '实用', verified: '办理方式待迎新通知核验',
+    summary: '校园卡、网络和各类账号通常在入学阶段统一说明，任何缴费都先核对官方渠道。',
+    content: ['按迎新流程领取或开通校园身份相关服务', '账号初始密码及时修改，不与其他平台共用密码', '充值、缴费只使用学校明确公布的入口', '遇到校园卡、网络故障，优先联系校内对应服务部门'],
+    source: '数字校园及迎新现场通知', sourceUrl: 'https://www.hrbeu.edu.cn/', updated: '2026-08-01', keywords: '校园卡 饭卡 食堂 网络 宽带 充值 密码 账号'
+  },
+  {
+    id: 'clubs-join', category: 'clubs', title: '如何选择学生组织与社团', priority: '经验', verified: '学长学姐经验',
+    summary: '先体验、再选择；兴趣和时间匹配比“加得多”更重要。',
+    content: ['关注学校及学院官方招新通知、百团招新等活动', '先了解活动频率、实际工作内容和时间投入', '大一建议控制数量，给课程学习、运动和休息留出空间', '凡以招新名义要求高额缴费、购买课程或拉人头的活动要警惕'],
+    source: '在校生经验整理；具体名单以校团委发布为准', sourceUrl: 'https://youth.hrbeu.edu.cn/', updated: '2026-08-01', keywords: '社团 学生会 组织 招新 百团 团委 兴趣'
+  },
+  {
+    id: 'anti-fraud', category: 'safety', title: '开学季防骗清单', priority: '必看', verified: '安全常识',
+    summary: '“内部群、提前缴费、兼职刷单、冒充老师”是高频风险；先核实身份，再做操作。',
+    content: ['不向陌生人提供身份证照片、验证码、银行卡密码', '班级群、家长群中新加入的“老师”也要通过官方渠道二次核实', '任何奖助学金、学费退款信息都不要点击陌生链接', '拒绝刷单返利、出租出售电话卡银行卡、代收不明包裹', '遇到紧急安全问题及时报警，并联系辅导员或学校保卫部门'],
+    source: '公安机关反诈宣传与校园安全常识', sourceUrl: 'https://www.96110.cn/', updated: '2026-08-01', keywords: '诈骗 防骗 骗子 缴费 群 兼职 刷单 电话卡 银行卡 报警'
+  }
+];
+
+export const timeline = [
+  { date: '收到通知书后', title: '核对入学材料', detail: '只以录取通知书、学校官网和学院官方通知为准。' },
+  { date: '8 月', title: '完成线上迎新事项', detail: '具体系统入口和开放日期等待学校正式通知。' },
+  { date: '报到前 3 天', title: '确认天气与路线', detail: '检查证件、车票、住宿安排和紧急联系人。' },
+  { date: '到校当天', title: '现场报到', detail: '按引导完成身份核验、住宿等流程，不找陌生人代办。' },
+  { date: '入学第一周', title: '认识培养方案', detail: '核对课表，参加学院说明会，保存辅导员与教务联系方式。' }
+];
+
+export const officialLinks = [
+  { name: '学校官网', url: 'https://www.hrbeu.edu.cn/', desc: '学校公告与权威信息入口' },
+  { name: '本科生院', url: 'https://ugs.hrbeu.edu.cn/', desc: '本科教学、选课与教务通知' },
+  { name: '校团委', url: 'https://youth.hrbeu.edu.cn/', desc: '校园文化、学生组织与活动' },
+  { name: '招生网', url: 'https://zsb.hrbeu.edu.cn/', desc: '招生与录取相关信息' }
+];
