@@ -236,6 +236,35 @@ const ragIntentProfiles = [
   { id:'time', label:'时间安排', triggers:['什么时候','几点','时间','开放','报到时间','营业时间','日期'], boosts:['时间','日期','开放','营业','通知','当年','最新'] },
   { id:'download', label:'资源下载', triggers:['下载','pdf','ppt','模板','文件'], boosts:['下载','PDF','PPT','模板','压缩包','文件'] }
 ];
+const ragTopicItemRules = [
+  { terms:['报到材料','报到带','带什么','通知书','个人档案','党团关系','绿色通道'], itemIds:['arrival-list'] },
+  { terms:['到校路线','怎么到校','机场','哈尔滨站','哈站','哈尔滨西站','哈西','火车站','接站'], itemIds:['arrival-route','harbin-life-basics'] },
+  { terms:['选课','抢课','退课','补选','教务系统','课表'], itemIds:['course-process'] },
+  { terms:['培养方案','培养计划','毕业学分','转专业','推免'], itemIds:['training-plan','first-semester-required-courses'] },
+  { terms:['大一上','公共必修','必修课','工科数学分析','线性代数','军训'], itemIds:['first-semester-required-courses'] },
+  { terms:['宿舍','寝室','公寓','四人寝','上床下桌','独卫','阳台','查寝'], itemIds:['dorm-apartment-guide','dorm-life'] },
+  { terms:['洗浴','洗澡','浴池','澡堂'], itemIds:['bath-center-guide','dorm-apartment-guide'] },
+  { terms:['洗衣机','洗衣服','吹风机','吹头发'], itemIds:['dorm-apartment-guide'] },
+  { terms:['宿舍电费','公寓电费','电费账号','电费充值','电费余额','断电','gy0'], itemIds:['dorm-electricity-guide'] },
+  { terms:['校园卡','饭卡','一卡通','餐卡','澡卡','校园码','挂失','补卡'], itemIds:['canteen-card'] },
+  { terms:['校园网','无线网','wifi','wi-fi','网费','网络费','宽带费','上网费','heu-auto','heu-wlan','vpn'], itemIds:['campus-network-guide'] },
+  { terms:['中国银行','中行','银行卡','储蓄卡','办银行卡'], itemIds:['campus-banking-guide'] },
+  { terms:['购物','买东西','超市','生活用品','新生采购','被子','洗衣液','电话卡','理发','水果店','修手机'], itemIds:['campus-shopping-services'] },
+  { terms:['外卖','外卖柜','取餐柜','取餐'], itemIds:['campus-delivery-lockers'] },
+  { terms:['吃饭','食堂','饭堂','餐厅','大美','小美','至美','快乐食间'], itemIds:['campus-canteens-guide'] },
+  { terms:['小公交','校车','校园公交','校园巴士','摆渡车','接驳车'], itemIds:['campus-shuttle-guide'] },
+  { terms:['快递','驿站','包裹','寄行李','收件地址','取件'], itemIds:['campus-delivery'] },
+  { terms:['打印','复印','印刷','教材','课本','二手书','书店','图书馆','借书','借阅','馆藏'], itemIds:['printing-books-library'] },
+  { terms:['移动校园','heu校园','校园app','财务服务','缴学费'], itemIds:['heu-mobile-campus'] },
+  { terms:['赞噢','校园集市','集市'], itemIds:['zanou-campus-market'] },
+  { terms:['助学贷款','国家助贷','国助贷','生源地贷款','校园地贷款','贷款回执','受理证明'], itemIds:['student-loan-guide'] },
+  { terms:['奖学金','助学金','奖助学金','国家奖学金','国奖','国家励志','国励','国防科技奖学金'], itemIds:['scholarships-grants-guide'] },
+  { terms:['困难生','家庭经济困难','困难认定','贫困认定','贫困生','智慧学工'], itemIds:['financial-hardship-identification'] },
+  { terms:['社团','学生组织','学生会','招新','百团'], itemIds:['clubs-join'] },
+  { terms:['诈骗','防骗','反诈','刷单','冒充老师'], itemIds:['anti-fraud'] },
+  { terms:['ppt','模板','答辩模板','汇报模板'], itemIds:['heu-ppt-templates'] },
+  { terms:['校史','校训','哈军工','军工精神','三海一核','优势学科'], itemIds:['heu-basics'] }
+];
 function ragNormalize(value) { return String(value || '').toLowerCase().replace(/[“”‘’、，。！？：；（）【】《》\s\-_/]/g,''); }
 function ragTokens(value) {
   const normalized=ragNormalize(value); const pieces=normalized.match(/[\u4e00-\u9fa5]+|[a-z0-9]+/g)||[]; const result=[];
@@ -246,6 +275,11 @@ function detectIntent(query) {
   const normalized=ragNormalize(query);
   const hits=ragIntentProfiles.map(profile=>({profile,score:profile.triggers.reduce((sum,trigger)=>sum+(normalized.includes(ragNormalize(trigger))?1:0),0)})).filter(hit=>hit.score>0).sort((a,b)=>b.score-a.score);
   return hits[0]?.profile || { id:'general', label:'综合检索', boosts:[] };
+}
+function detectTopicItemIds(query) {
+  const normalized=ragNormalize(query); const ids=new Set();
+  ragTopicItemRules.forEach(rule=>{if(rule.terms.some(term=>normalized.includes(ragNormalize(term)))) rule.itemIds.forEach(id=>ids.add(id));});
+  return ids;
 }
 function ragExpand(tokens) {
   const expanded=new Set(tokens); const joined=tokens.join('');
@@ -267,7 +301,7 @@ const ragChunks = guideItems.flatMap(item => {
   return chunks.map(chunk=>({item,category,...chunk,titleHay:ragNormalize(item.title),keywordHay:ragNormalize(`${item.keywords} ${category?.name || ''} ${item.priority} ${item.verified}`),textHay:ragNormalize(chunk.text)}));
 });
 function retrieve(query) {
-  const normalized=ragNormalize(query); const intent=detectIntent(query); const baseTerms=ragTokens(query); const baseSet=new Set(baseTerms); const terms=ragExpand(baseTerms); const phraseTerms=[]; for(let size=4;size<=7;size++){for(let i=0;i+size<=normalized.length;i++){const phrase=normalized.slice(i,i+size);if(/[\u4e00-\u9fa5]/.test(phrase)) phraseTerms.push(phrase);}}
+  const normalized=ragNormalize(query); const intent=detectIntent(query); const topicItemIds=detectTopicItemIds(query); const baseTerms=ragTokens(query); const baseSet=new Set(baseTerms); const terms=ragExpand(baseTerms); const phraseTerms=[]; for(let size=4;size<=7;size++){for(let i=0;i+size<=normalized.length;i++){const phrase=normalized.slice(i,i+size);if(/[\u4e00-\u9fa5]/.test(phrase)) phraseTerms.push(phrase);}}
   const scored=ragChunks.map(chunk=>{ let score=0; if(normalized&&chunk.titleHay.includes(normalized)) score+=30; if(normalized&&chunk.textHay.includes(normalized)) score+=20;
     if((normalized.includes('用途')||normalized.includes('功能')||normalized.includes('有哪些'))&&chunk.type==='摘要') score+=18;
     if((normalized.includes('丢了')||normalized.includes('丢卡')||normalized.includes('遗失'))&&chunk.textHay.includes('挂失')) score+=32;
@@ -295,7 +329,7 @@ function retrieve(query) {
     terms.forEach(term=>{const weight=baseSet.has(term)?1:.32; if(chunk.textHay.includes(term)) score+=(term.length>=4?8:4)*weight; if(chunk.titleHay.includes(term)) score+=9*weight; if(chunk.keywordHay.includes(term)) score+=1.5*weight;});
     if(chunk.type==='摘要') score+=1.5;
     if(chunk.item.priority==='必看') score+=1.2;
-    return {...chunk,score}; }).filter(chunk=>chunk.score>0).sort((a,b)=>b.score-a.score);
+    return {...chunk,score}; }).filter(chunk=>chunk.score>0&&(!topicItemIds.size||topicItemIds.has(chunk.item.id))).sort((a,b)=>b.score-a.score);
   const selected=[]; const perItem=new Map(); const seenText=new Set();
   scored.forEach(chunk=>{const count=perItem.get(chunk.item.id)||0; const fingerprint=chunk.textHay.slice(0,42); if(count<3&&!seenText.has(fingerprint)){selected.push(chunk);perItem.set(chunk.item.id,count+1);seenText.add(fingerprint);}});
   return selected.slice(0,8).map(chunk=>({...chunk,intent}));
@@ -360,15 +394,82 @@ function studyServicesDirectAnswer(question) {
   if(wantsTextbooks) blocks.push('<li><b>教材：</b>先等任课教师、学院或班级确认书目和版本，再选择统一领取、新书或二手书；不要只凭课程名称提前购买旧版教材。</li>');
   return {html:`<ul>${blocks.join('')}</ul><em>地点开放情况、打印价格和图书馆借阅规则以现场及当前系统为准。</em>`,hits:[{item,score:100}]};
 }
-function selectDetailedEvidence(chunks) {
+const focusedAnswerProfiles = [
+  { match:q=>/(查寝|查房|卫生检查)/.test(q), itemId:'dorm-apartment-guide', section:'查寝与安全管理' },
+  { match:q=>/(几人寝|几人间|四人寝|四人间|上床下桌|独卫|卫生间|阳台|空调|暖气|供暖)/.test(q), itemId:'dorm-apartment-guide', section:'常见寝室配置' },
+  { match:q=>/(宿舍|寝室|公寓).*(怎么样|配置|条件)/.test(q), itemId:'dorm-apartment-guide', section:'常见寝室配置' },
+  { match:q=>/(洗衣机|洗衣服|吹风机|吹头发)/.test(q), itemId:'dorm-apartment-guide', section:'洗衣与吹风参考' },
+  { match:q=>/(洗浴|洗澡|浴池|澡堂)/.test(q), itemId:'bath-center-guide', text:'洗浴地点、开放时间和暂停营业安排会调整，出发前查看浴池或公寓楼内最新公告；使用方式和扣费以现场设备提示为准。', label:'洗浴安排' },
+  { match:q=>/(电费账号|gy0|房间账号)/.test(q), itemId:'dorm-electricity-guide', section:'账号格式' },
+  { match:q=>/(电费.*(多少|费用|一个月)|每月电费)/.test(q), itemId:'dorm-electricity-guide', section:'参考额度' },
+  { match:q=>/(电费.*(分摊|平摊|室友)|怎么分摊)/.test(q), itemId:'dorm-electricity-guide', section:'怎么分摊' },
+  { match:q=>/(电费.*(充值|预充|缴费)|怎么交电费)/.test(q), itemId:'dorm-electricity-guide', section:'可以预充' },
+  { match:q=>/(网费|网络费|校园网.*(多少|收费|缴费|充值))/.test(q), itemId:'campus-network-guide', section:'资费与账号' },
+  { match:q=>/((校园网|wifi|heuauto|heuwlan).*(连接|联网|登录|怎么用)|怎么.*(校园网|wifi))/.test(q), itemId:'campus-network-guide', section:'最推荐' },
+  { match:q=>/(vpn|校外.*(知网|数据库|图书馆资源))/.test(q), itemId:'campus-network-guide', section:'校外查资源' },
+  { match:q=>/(校园卡|饭卡|一卡通).*(充值|余额)/.test(q), itemId:'canteen-card', text:'优先通过 HEU 移动校园或学校自助渠道充值；充值后先刷新核对余额，不要连续重复支付。', label:'充值' },
+  { match:q=>/(校园卡|饭卡|一卡通).*(丢|挂失|补卡)/.test(q), itemId:'canteen-card', section:'充值与挂失' },
+  { match:q=>/(校园卡|饭卡|一卡通).*(用途|有什么用|能干什么|怎么用)/.test(q), itemId:'canteen-card', text:'校园卡常用于食堂消费、公共洗浴、部分宿舍电费缴纳、图书借阅、门禁和身份核验；具体支持场景以现场设备为准。', label:'主要用途' },
+  { match:q=>/(有哪些食堂|什么食堂|食堂有哪些|去哪里吃饭|哪里吃饭|大美|小美|至美|快乐食间)/.test(q), itemId:'campus-canteens-guide', section:'四个就餐点' },
+  { match:q=>/(食堂|吃饭).*(付款|支付|刷卡|校园卡)/.test(q), itemId:'campus-canteens-guide', section:'怎么付款' },
+  { match:q=>/外卖/.test(q), itemId:'campus-delivery-lockers', text:'校内配送通常放到公寓楼下外卖柜；校外外卖一般不能入校，常在东门、北门、南门等校门区域柜机或指定点取餐。收到通知后尽快领取，超过 24 小时可能被清理。', label:'取餐位置' },
+  { match:q=>/(小公交|校园公交|校园巴士|校车|摆渡车).*(多少|费用|票价|收费)/.test(q), itemId:'campus-shuttle-guide', section:'参考费用' },
+  { match:q=>/(小公交|校园公交|校园巴士|校车|摆渡车).*(路线|站点|怎么坐)/.test(q), itemId:'campus-shuttle-guide', section:'路线怎么看' },
+  { match:q=>/(生活用品|购物|超市|买东西)/.test(q), itemId:'campus-shopping-services', text:'日常用品可先去启航活动中心地下生活超市、公寓楼下生活超市或北体育场周边；大件和品类较多的用品也可到校外周边购买。', label:'生活用品' },
+  { match:q=>/((被子|洗衣液|电话卡|手机卡).*(购买|怎么买|哪里买|统一)|买.*(被子|洗衣液|电话卡|手机卡))/.test(q), itemId:'campus-shopping-services', section:'入学采购怎么选' },
+  { match:q=>/(快递|驿站|包裹|取件).*(哪里|地点|在哪)/.test(q), itemId:'campus-delivery', section:'常见取件区域' },
+  { match:q=>/(收件地址|快递地址|寄到学校)/.test(q), itemId:'campus-delivery', section:'标准地址' },
+  { match:q=>/(中国银行|中行|银行卡).*(办理|办卡|哪里办|免费)/.test(q), itemId:'campus-banking-guide', section:'到校能否办理' },
+  { match:q=>/(报到|报道).*(材料|带什么|准备)|录取通知书|个人档案/.test(q), itemId:'arrival-list', text:'重点准备录取通知书及通知书要求材料、本人有效身份证件、密封的党团关系和个人档案；办理助学贷款或困难认定的同学再带对应证明。', label:'报到材料' },
+  { match:q=>/(哈尔滨站|哈站)/.test(q), itemId:'arrival-route', section:'哈尔滨站' },
+  { match:q=>/(哈尔滨西站|哈西)/.test(q), itemId:'arrival-route', section:'哈尔滨西站' },
+  { match:q=>/(太平机场|太平国际机场|机场.*到校)/.test(q), itemId:'arrival-route', section:'太平国际机场' },
+  { match:q=>/(选课|抢课|退课|补选|教务系统)/.test(q), itemId:'course-process', text:'先核对培养方案和推荐课表，再按教务系统开放轮次选课；提交后重新确认最终课表，退补选、重修等特殊情况咨询学院教学办公室。', label:'选课流程' },
+  { match:q=>/(培养方案|培养计划|毕业学分|转专业|推免)/.test(q), itemId:'training-plan', text:'先确认“年级 + 专业”对应的培养方案，重点看毕业总学分、课程模块、先修关系和实践环节；疑问以学院教学办公室解释为准。', label:'培养方案' },
+  { match:q=>/(国家奖学金|国奖)/.test(q), itemId:'scholarships-grants-guide', text:'资料显示国家奖学金一般面向二年级及以上特别优秀的全日制本科生，参考金额 10000 元；需按学院当年通知主动申请并参加评定。', label:'国家奖学金' },
+  { match:q=>/(国家励志|国励|励志奖学金)/.test(q), itemId:'scholarships-grants-guide', text:'国家励志奖学金一般面向二年级及以上、品学兼优且家庭经济困难的本科生，资料参考金额 6000 元；以当年评定通知为准。', label:'国家励志奖学金' },
+  { match:q=>/(国家助学金|助学金).*(申请|条件|多少|金额)/.test(q), itemId:'scholarships-grants-guide', text:'国家助学金面向家庭经济困难学生，通常需先完成困难认定并按通知申请；资料参考平均标准为 3700 元，最终金额和档次以当年通知为准。', label:'国家助学金' },
+  { match:q=>/((奖学金|助学金).*(怎么申请|申请流程|申请材料)|怎么申请.*(奖学金|助学金))/.test(q), itemId:'scholarships-grants-guide', section:'申请前准备' },
+  { match:q=>/(困难生|困难认定|贫困认定|智慧学工)/.test(q), itemId:'financial-hardship-identification', section:'常见路径' },
+  { match:q=>/(移动校园|heu校园|校园app).*(下载|安装|哪里下)/.test(q), itemId:'heu-mobile-campus', section:'下载安装要认准' },
+  { match:q=>/(移动校园|heu校园|校园app).*(登录不了|无法登录|账号不存在|未录入)/.test(q), itemId:'heu-mobile-campus', section:'新生暂时登录不了？' },
+  { match:q=>/(移动校园|heu校园|校园app).*(功能|能做什么|怎么用)/.test(q), itemId:'heu-mobile-campus', text:'常用入口包括校园卡、财务服务、校园码、校历、报修、校园网、图书借阅和校园小公交；实际开放范围以个人页面为准。', label:'常用功能' },
+  { match:q=>/(赞噢|校园集市)/.test(q), itemId:'zanou-campus-market', text:'在微信搜索“赞噢校园集市”可浏览校园即时信息或发帖提问；经验问题适合在这里交流，缴费、账号和政策仍以学校官方渠道为准。', label:'校园集市' },
+  { match:q=>/(社团|学生组织|学生会|百团|招新)/.test(q), itemId:'clubs-join', text:'先了解活动频率、实际工作和时间投入，再按兴趣选择；大一不建议加入过多，遇到高额缴费、强制买课或拉人头要警惕。', label:'社团选择' }
+];
+function focusedKnowledgeAnswer(question) {
+  const normalized=ragNormalize(question); const matches=focusedAnswerProfiles.filter(profile=>profile.match(normalized)).slice(0,4);
+  if(!matches.length) return null;
+  const points=[]; const items=[]; const seenText=new Set();
+  matches.forEach(profile=>{
+    const item=guideItems.find(entry=>entry.id===profile.itemId); if(!item) return;
+    const section=profile.section?item.sections?.find(entry=>entry.title===profile.section):null;
+    const answerText=profile.text||section?.text; if(!answerText||seenText.has(answerText)) return;
+    seenText.add(answerText); points.push(`<li><b>${escapeHtml(profile.label||section?.title||item.title)}：</b>${escapeHtml(answerText)}</li>`);
+    if(!items.some(entry=>entry.id===item.id)) items.push(item);
+  });
+  if(!points.length) return null;
+  return {html:`<ul>${points.join('')}</ul><em>费用、开放时间和办理规则以学校最新通知或现场提示为准。</em>`,hits:items.map(item=>({item,score:100}))};
+}
+function selectDetailedEvidence(chunks, question) {
   const candidates=chunks.filter(chunk=>chunk.score>=Math.max(10,chunks[0].score*.25));
-  const itemsWithDetails=new Set(candidates.filter(chunk=>chunk.type!=='摘要').map(chunk=>chunk.item.id));
-  const ranked=candidates.filter(chunk=>chunk.type!=='摘要'||!itemsWithDetails.has(chunk.item.id)).sort((a,b)=>(b.type!=='摘要')-(a.type!=='摘要')||b.score-a.score||b.text.length-a.text.length);
+  const noise=new Set(['怎么','如何','哪里','哪些','什么','时候','可以','学校','新生','哈工程','一下','请问','有没有']);
+  const focusTerms=ragTokens(question).filter(term=>term.length>1&&!noise.has(term));
+  const withFocus=candidates.map(chunk=>{
+    const hay=`${chunk.textHay}${chunk.titleHay}${ragNormalize(chunk.type)}`;
+    const focusScore=focusTerms.reduce((sum,term)=>sum+(hay.includes(term)?(term.length>=4?5:2):0),0);
+    return {...chunk,focusScore};
+  });
+  const bestPerItem=new Map();
+  withFocus.forEach(chunk=>bestPerItem.set(chunk.item.id,Math.max(bestPerItem.get(chunk.item.id)||0,chunk.focusScore)));
+  const focused=withFocus.filter(chunk=>{const best=bestPerItem.get(chunk.item.id)||0;return best<3||chunk.focusScore>=Math.max(2,best*.55);});
+  const itemsWithDetails=new Set(focused.filter(chunk=>chunk.type!=='摘要'&&chunk.focusScore>0).map(chunk=>chunk.item.id));
+  const ranked=focused.filter(chunk=>chunk.type!=='摘要'||!itemsWithDetails.has(chunk.item.id)).sort((a,b)=>b.focusScore-a.focusScore||(b.type!=='摘要')-(a.type!=='摘要')||b.score-a.score||b.text.length-a.text.length);
   const selected=[]; const perItem=new Map();
   ranked.forEach(chunk=>{
     if(selected.length>=4||(perItem.get(chunk.item.id)||0)>=2) return;
     const text=ragNormalize(chunk.text);
-    if(selected.some(existing=>{const prior=ragNormalize(existing.text);return prior.includes(text)||text.includes(prior)})) return;
+    if(selected.some(existing=>{const prior=ragNormalize(existing.text);if(prior.includes(text)||text.includes(prior)) return true;const currentTerms=ragTokens(chunk.text);const priorTerms=new Set(ragTokens(existing.text));const overlap=currentTerms.filter(term=>priorTerms.has(term)).length;return overlap>=Math.max(2,Math.min(currentTerms.length,priorTerms.size)*.7);} )) return;
     selected.push(chunk); perItem.set(chunk.item.id,(perItem.get(chunk.item.id)||0)+1);
   });
   return selected;
@@ -379,9 +480,10 @@ function answer(question) {
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
   const loanAnswer=studentLoanDirectAnswer(question); if(loanAnswer) return loanAnswer;
   const studyServicesAnswer=studyServicesDirectAnswer(question); if(studyServicesAnswer) return studyServicesAnswer;
+  const focusedAnswer=focusedKnowledgeAnswer(question); if(focusedAnswer) return focusedAnswer;
   const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return guidanceFallback(question);
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
-  const evidenceChunks=selectDetailedEvidence(chunks); const evidence=evidenceChunks.map(chunk=>`<li>${escapeHtml(chunk.text)}</li>`).join('');
+  const evidenceChunks=selectDetailedEvidence(chunks,question); const evidence=evidenceChunks.map(chunk=>`<li>${escapeHtml(chunk.text)}</li>`).join('');
   const evidenceDocs=[...new Set(evidenceChunks.map(chunk=>chunk.item.id))]; const citedDocs=docs.filter(item=>evidenceDocs.includes(item.id));
   const downloads=citedDocs.filter(item=>item.download).map(item=>`<a class="chat-download" href="${item.download.href}" download>↓ ${item.download.label}（${item.download.size}）</a>`).join('');
   return {html:`<ul>${evidence}</ul>${downloads}<em>费用、日期、账号和管理政策以学校最新通知为准。</em>`,hits:citedDocs.map(item=>({item,score:chunks.filter(chunk=>chunk.item.id===item.id).reduce((sum,chunk)=>sum+chunk.score,0)}))};
