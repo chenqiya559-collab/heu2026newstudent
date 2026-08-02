@@ -189,6 +189,7 @@ const ragSynonymGroups = [
   ['移动校园','校园app','校园 APP','HEU校园','缴费','校园卡充值','财务服务'],
   ['校园卡','饭卡','校园码','电子校园卡','充值','余额'], ['校园网','wifi','wi-fi','无线网','网络','联网','HEU-AUTO','HEU-WLAN'], ['VPN','校外访问','内网','知网','图书馆数据库'],
   ['宿舍','公寓','寝室','宿寝','床位'], ['洗澡','洗浴','浴池','公共浴池','澡堂'], ['电器','大功率','用电','插排','违规电器'],
+  ['购物','买东西','超市','生活超市','生活用品','启航活动中心','启航地下','北体育场','北体','公寓楼下'], ['外卖','点外卖','送餐','取餐','外卖柜','取餐柜','东门','北门','南门'], ['打印','复印','印刷','打印店','21b','21B','PDF','装订'], ['教材','课本','书本','二手书','书店'], ['图书馆','借书','借阅','馆藏','索书号'],
   ['快递','邮寄','驿站','取件','收件','寄行李','行李'], ['公交','校车','小公交','接站'],
   ['PPT','模板','答辩','汇报','演示'], ['助学贷款','贷款回执','受理证明','助学金','资助'], ['社团','学生组织','学生会','招新','百团'],
   ['诈骗','防骗','骗局','刷单','陌生链接','冒充老师','缴费诈骗']
@@ -274,9 +275,13 @@ function schoolFactAnswer(question) {
   if(!facts.length) return null;
   return {html:`关于哈工程，这几条可以先记住：<ul>${facts.map(fact=>`<li>${escapeHtml(fact)}</li>`).join('')}</ul><em>这是一份面向新生的基础介绍，表述以学校官网最新信息为准。</em>`,hits:[{item,score:100}]};
 }
+function hasSpecificQuestionAnchor(question) {
+  const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','校园网','宿舍','洗浴','浴池','快递','社团','诈骗','哈军工','校训','学科','赞噢','集市','购物','超市','启航','北体育场','北体','外卖','取餐','打印','21b','教材','二手书','图书馆','借阅'];
+  return anchors.some(anchor=>normalized.includes(ragNormalize(anchor)));
+}
 function answer(question) {
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
-  const chunks=retrieve(question); if(!chunks.length||chunks[0].score<12) return {html:'这个问题暂时没有足够的知识库证据，我不想猜测。你可以换一种说法，或查看学校官网、本科生院、招生网或学院教学办公室的最新通知。',hits:[]};
+  const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return {html:'这个问题暂时没有足够的知识库证据，我不想猜测。你可以换一种说法，补充地点、服务或具体事项，或查看学校官网、本科生院、招生网或学院教学办公室的最新通知。',hits:[]};
   const topScore=chunks[0].score; const confidence=topScore>=45?'高':topScore>=24?'中':'待确认';
   const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
   const evidenceChunks=chunks.filter((chunk,index)=>index===0||chunk.score>=Math.max(10,chunks[0].score*.25)).slice(0,6); const evidence=evidenceChunks.map(chunk=>`<li><b>${escapeHtml(chunk.item.title)}｜${escapeHtml(chunk.type)}</b>：${escapeHtml(chunk.text)}</li>`).join('');
