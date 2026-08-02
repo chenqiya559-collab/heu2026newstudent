@@ -187,10 +187,10 @@ const ragSynonymGroups = [
   ['选课','抢课','退课','补选','课表','教务系统'], ['培养方案','培养计划','毕业要求','学分','先修','转专业','推免'],
   ['工科数学分析','高数','数学分析','数分'], ['线性代数','线代'], ['大学英语','英语一'], ['军事技能训练','军训'],
   ['移动校园','校园app','校园 APP','HEU校园','缴费','校园卡充值','财务服务'],
-  ['校园卡','饭卡','校园码','电子校园卡','充值','余额'], ['校园网','wifi','wi-fi','无线网','网络','联网','HEU-AUTO','HEU-WLAN'], ['VPN','校外访问','内网','知网','图书馆数据库'],
-  ['宿舍','公寓','寝室','宿寝','床位'], ['洗澡','洗浴','浴池','公共浴池','澡堂'], ['电器','大功率','用电','插排','违规电器'],
-  ['吃饭','用餐','就餐','食堂','饭堂','餐厅','大美食堂','大美','小美食堂','小美','至美餐厅','至美','快乐食间','早餐','午饭','晚饭'], ['购物','买东西','超市','生活超市','生活用品','启航活动中心','启航地下','北体育场','北体','公寓楼下'], ['外卖','点外卖','送餐','取餐','外卖柜','取餐柜','东门','北门','南门'], ['打印','复印','印刷','打印店','21b','21B','PDF','装订'], ['教材','课本','书本','二手书','书店'], ['图书馆','借书','借阅','馆藏','索书号'],
-  ['快递','邮寄','驿站','取件','收件','寄行李','行李'], ['公交','校车','小公交','接站'],
+  ['校园卡','饭卡','一卡通','餐卡','澡卡','校园码','电子校园卡','充值','余额','挂失','补卡','电费','充电费'], ['校园网','wifi','wi-fi','无线','无线网','网络','联网','网费','HEU-AUTO','HEU-WLAN'], ['VPN','校外访问','内网','知网','图书馆数据库'],
+  ['宿舍','公寓','寝室','宿寝','床位','独卫','独立卫生间','四人寝','四人间','上床下桌','阳台','查寝'], ['洗澡','洗浴','浴池','公共浴池','澡堂'], ['电器','大功率','用电','插排','违规电器'],
+  ['吃饭','用餐','就餐','食堂','饭堂','餐厅','大美食堂','大美','小美食堂','小美','至美餐厅','至美','快乐食间','早餐','午饭','晚饭'], ['购物','买东西','超市','生活超市','生活用品','启航活动中心','启航地下','北体育场','北体','公寓楼下','剪头','剪头发','理发','修手机','手机维修','买水果'], ['外卖','外送','叫外卖','点外卖','送餐','取餐','外卖柜','取餐柜','东门','北门','南门'], ['打印','复印','印刷','打印店','21b','21B','PDF','装订'], ['教材','课本','书本','二手书','书店'], ['图书馆','借书','借阅','馆藏','索书号'],
+  ['快递','邮寄','驿站','取件','收件','包裹','寄行李','行李'], ['公交','校车','小公交','校园巴士','巴士','摆渡车','接驳车','接站'],
   ['PPT','模板','答辩','汇报','演示'], ['助学贷款','贷款回执','受理证明','助学金','资助'], ['社团','学生组织','学生会','招新','百团'],
   ['诈骗','防骗','骗局','刷单','陌生链接','冒充老师','缴费诈骗']
 ];
@@ -258,7 +258,9 @@ function retrieve(query) {
     if((normalized.includes('成立')||normalized.includes('哪年')||normalized.includes('建校'))&&chunk.textHay.includes('1953')) score+=45;
     if((normalized.includes('学科')||normalized.includes('专业实力')||normalized.includes('优势学科'))&&chunk.textHay.includes('三海一核')) score+=35;
     if(['吃饭','食堂','餐厅','大美','小美','至美','快乐食间'].some(term=>normalized.includes(term))&&chunk.item.id==='campus-canteens-guide') score+=45;
-    if(['小公交','校车','校园公交'].some(term=>normalized.includes(term))&&chunk.item.id==='campus-shuttle-guide') score+=45;
+    if(['小公交','校车','校园公交','校园巴士','巴士','摆渡车','接驳车'].some(term=>normalized.includes(term))&&chunk.item.id==='campus-shuttle-guide') score+=45;
+    if(['快递','包裹','取件','驿站'].some(term=>normalized.includes(term))&&chunk.item.id==='campus-delivery') score+=45;
+    if(['饭卡','一卡通','餐卡','澡卡','补卡','挂失','充电费'].some(term=>normalized.includes(term))&&chunk.item.id==='canteen-card') score+=35;
     intent.boosts.forEach(term=>{const normalizedBoost=ragNormalize(term); if(chunk.textHay.includes(normalizedBoost)) score+=5; if(chunk.keywordHay.includes(normalizedBoost)) score+=3;});
     phraseTerms.forEach(phrase=>{if(chunk.textHay.includes(phrase)) score+=14; if(chunk.titleHay.includes(phrase)) score+=8;});
     terms.forEach(term=>{const weight=baseSet.has(term)?1:.32; if(chunk.textHay.includes(term)) score+=(term.length>=4?8:4)*weight; if(chunk.titleHay.includes(term)) score+=9*weight; if(chunk.keywordHay.includes(term)) score+=1.5*weight;});
@@ -280,8 +282,12 @@ function schoolFactAnswer(question) {
   return {html:`关于哈工程，这几条可以先记住：<ul>${facts.map(fact=>`<li>${escapeHtml(fact)}</li>`).join('')}</ul><em>这是一份面向新生的基础介绍，表述以学校官网最新信息为准。</em>`,hits:[{item,score:100}]};
 }
 function hasSpecificQuestionAnchor(question) {
-  const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','饭卡','校园网','宿舍','洗浴','浴池','快递','社团','诈骗','哈军工','校训','学科','赞噢','集市','吃饭','食堂','餐厅','大美','小美','至美','快乐食间','小公交','校车','购物','超市','启航','北体育场','北体','外卖','取餐','打印','21b','教材','二手书','图书馆','借阅'];
+  const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','饭卡','一卡通','餐卡','澡卡','校园码','充值','余额','挂失','补卡','电费','校园网','无线','wifi','网费','宿舍','寝室','独卫','四人寝','四人间','上床下桌','阳台','查寝','洗澡','洗浴','浴池','澡堂','快递','包裹','取件','驿站','社团','诈骗','哈军工','校训','学科','赞噢','集市','吃饭','食堂','餐厅','大美','小美','至美','快乐食间','小公交','校车','校园巴士','巴士','摆渡车','接驳车','购物','超市','启航','北体育场','北体','剪头','理发','修手机','水果','外卖','外送','取餐','打印','复印','21b','教材','课本','二手书','图书馆','借书','借阅'];
   return anchors.some(anchor=>normalized.includes(ragNormalize(anchor)));
+}
+function otherSchoolFallback(question) {
+  if(!/(哈工大|哈尔滨工业大学)/.test(question)) return null;
+  return {html:'这里是面向哈尔滨工程大学新生的助手，无法可靠回答哈尔滨工业大学的校情问题。建议查看对方学校官网或官方招生渠道，避免把两所学校的信息混在一起。',hits:[]};
 }
 function guidanceFallback(question) {
   const market=guideItems.find(item=>item.id==='zanou-campus-market'); const sensitive=/(缴费|学费|账号|密码|验证码|政策|处分|录取|学籍|成绩|考试|报到)/.test(question);
@@ -289,6 +295,7 @@ function guidanceFallback(question) {
   return {html:`这个问题可能需要更多现场经验或具体背景。你可以先到“赞噢校园集市”搜索关键词，没有合适答案时再发帖，把年级、地点和具体需求写清楚，通常更容易得到学长学姐的有效回复。<em>${official}</em>`,hits:market?[{item:market,score:1}]:[]};
 }
 function answer(question) {
+  const otherSchoolAnswer=otherSchoolFallback(question); if(otherSchoolAnswer) return otherSchoolAnswer;
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
   const chunks=retrieve(question); if(!hasSpecificQuestionAnchor(question)||!chunks.length||chunks[0].score<12) return guidanceFallback(question);
   const topScore=chunks[0].score; const confidence=topScore>=45?'高':topScore>=24?'中':'待确认';
