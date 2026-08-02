@@ -391,21 +391,21 @@ function studyServicesDirectAnswer(question) {
   const blocks=[];
   if(wantsPrinting) blocks.push('<li><b>打印：</b>可去 21B 负一楼打印店、启航活动中心地下打印店，或使用部分公寓楼一楼的自助印刷设备。各处收费、营业时间和装订服务不同；打印前核对 PDF、页数、单双面、彩色和份数。</li>');
   if(wantsBorrowing) blocks.push('<li><b>借书：</b>图书馆图书可以借阅。先在图书馆检索系统查询馆藏、索书号和可借状态，再按索书号找书；借阅期限、续借和逾期规则以图书馆当前页面为准。</li>');
-  if(wantsTextbooks) blocks.push('<li><b>教材：</b>先等任课教师、学院或班级确认书目和版本，再选择统一领取、新书或二手书；不要只凭课程名称提前购买旧版教材。</li>');
+  if(wantsTextbooks) blocks.push('<li><b>教材：</b>先等任课教师、学院或班级确认书目、出版社和版本。可在开学后统一领取全套最新教材，也可按需到启航活动中心地下相关书店或二手书店购买；11 号楼内也有书店，但学生平时较少去。图书馆馆藏可供借阅，不要只凭课程名称提前购买旧版教材或习题册。</li>');
   return {html:`<ul>${blocks.join('')}</ul><em>地点开放情况、打印价格和图书馆借阅规则以现场及当前系统为准。</em>`,hits:[{item,score:100}]};
 }
 const focusedAnswerProfiles = [
   { match:q=>/(查寝|查房|卫生检查)/.test(q), itemId:'dorm-apartment-guide', section:'查寝与安全管理' },
-  { match:q=>/(几人寝|几人间|四人寝|四人间|上床下桌|独卫|卫生间|阳台|空调|暖气|供暖)/.test(q), itemId:'dorm-apartment-guide', section:'常见寝室配置' },
-  { match:q=>/(宿舍|寝室|公寓).*(怎么样|配置|条件)/.test(q), itemId:'dorm-apartment-guide', section:'常见寝室配置' },
-  { match:q=>/(洗衣机|洗衣服|吹风机|吹头发)/.test(q), itemId:'dorm-apartment-guide', section:'洗衣与吹风参考' },
-  { match:q=>/(洗浴|洗澡|浴池|澡堂)/.test(q), itemId:'bath-center-guide', text:'洗浴地点、开放时间和暂停营业安排会调整，出发前查看浴池或公寓楼内最新公告；使用方式和扣费以现场设备提示为准。', label:'洗浴安排' },
+  { match:q=>/(几人寝|几人间|四人寝|四人间|上床下桌|独卫|卫生间|阳台|空调|暖气|供暖)/.test(q), itemId:'dorm-apartment-guide', text:'常见宿舍为四人寝、上床下桌，无阳台，配有空调、集中供暖和寝室内卫生间，一寝一个厕所；实际家具和设施以分配房间为准。', label:'宿舍配置' },
+  { match:q=>/(宿舍|寝室|公寓).*(怎么样|配置|条件)/.test(q), itemId:'dorm-apartment-guide', text:'常见宿舍为四人寝、上床下桌，无阳台，配有空调、集中供暖和寝室内卫生间，一寝一个厕所；实际家具和设施以分配房间为准。', label:'宿舍配置' },
+  { match:q=>/(洗衣机|洗衣服|吹风机|吹头发)/.test(q), itemId:'dorm-apartment-guide', text:'公寓洗衣机参考收费为 3～4 元/次；公共吹风机参考收费为 0.1 元/分钟。宿舍受用电功率限制，不能直接使用个人吹风机，请到公寓指定区域使用公共设备；具体价格和开放情况以设备屏幕为准。', label:'洗衣与吹风收费' },
+  { match:q=>/(洗浴|洗澡|浴池|澡堂)/.test(q), itemId:'bath-center-guide', text:'时间参考：一浴池 8:00—22:00，周一休息；二浴池 12:00—21:00，周二休息；18、19 公寓浴池 16:00—23:00，周二休息。以上来自 2025 年公告，2026 年请以楼内最新通知为准。通常使用校园卡或指定设备计费，开始前确认读卡区和余额，放水后留意扣费，洗完按停止按钮。', label:'洗浴安排' },
   { match:q=>/(电费账号|gy0|房间账号)/.test(q), itemId:'dorm-electricity-guide', section:'账号格式' },
   { match:q=>/(电费.*(多少|费用|一个月)|每月电费)/.test(q), itemId:'dorm-electricity-guide', section:'参考额度' },
   { match:q=>/(电费.*(分摊|平摊|室友)|怎么分摊)/.test(q), itemId:'dorm-electricity-guide', section:'怎么分摊' },
   { match:q=>/(电费.*(充值|预充|缴费)|怎么交电费)/.test(q), itemId:'dorm-electricity-guide', section:'可以预充' },
   { match:q=>/(网费|网络费|校园网.*(多少|收费|缴费|充值))/.test(q), itemId:'campus-network-guide', section:'资费与账号' },
-  { match:q=>/((校园网|wifi|heuauto|heuwlan).*(连接|联网|登录|怎么用)|怎么.*(校园网|wifi))/.test(q), itemId:'campus-network-guide', section:'最推荐' },
+  { match:q=>/((校园网|wifi|heuauto|heuwlan).*(连接|联网|登录|怎么用)|怎么.*(校园网|wifi))/.test(q), itemId:'campus-network-guide', text:'手机和电脑优先连接 HEU-AUTO：账号通常为学号，密码通常为统一身份认证密码，按系统提示完成认证后可在覆盖区域自动连接。HEU-WLAN 一般会跳转网页认证。安卓连接 HEU-AUTO 时常用 PEAP + MSCHAPv2，身份填学号、匿名身份留空；CA 证书和域名按学校官方图示设置。新生账号启用时间和具体配置以学校通知为准。', label:'校园网连接' },
   { match:q=>/(vpn|校外.*(知网|数据库|图书馆资源))/.test(q), itemId:'campus-network-guide', section:'校外查资源' },
   { match:q=>/(校园卡|饭卡|一卡通).*(充值|余额)/.test(q), itemId:'canteen-card', text:'优先通过 HEU 移动校园或学校自助渠道充值；充值后先刷新核对余额，不要连续重复支付。', label:'充值' },
   { match:q=>/(校园卡|饭卡|一卡通).*(丢|挂失|补卡)/.test(q), itemId:'canteen-card', section:'充值与挂失' },
@@ -413,13 +413,13 @@ const focusedAnswerProfiles = [
   { match:q=>/(有哪些食堂|什么食堂|食堂有哪些|去哪里吃饭|哪里吃饭|大美|小美|至美|快乐食间)/.test(q), itemId:'campus-canteens-guide', section:'四个就餐点' },
   { match:q=>/(食堂|吃饭).*(付款|支付|刷卡|校园卡)/.test(q), itemId:'campus-canteens-guide', section:'怎么付款' },
   { match:q=>/外卖/.test(q), itemId:'campus-delivery-lockers', text:'校内配送通常放到公寓楼下外卖柜；校外外卖一般不能入校，常在东门、北门、南门等校门区域柜机或指定点取餐。收到通知后尽快领取，超过 24 小时可能被清理。', label:'取餐位置' },
-  { match:q=>/(小公交|校园公交|校园巴士|校车|摆渡车).*(多少|费用|票价|收费)/.test(q), itemId:'campus-shuttle-guide', section:'参考费用' },
-  { match:q=>/(小公交|校园公交|校园巴士|校车|摆渡车).*(路线|站点|怎么坐)/.test(q), itemId:'campus-shuttle-guide', section:'路线怎么看' },
+  { match:q=>/(小公交|校园公交|校园巴士|校车|摆渡车).*(多少|费用|票价|收费)/.test(q), itemId:'campus-shuttle-guide', text:'校内学生参考票价为 1 元/人，校外人士为 2 元/人。校园小公交只在校内往返，不会驶出校门；实际票价和支付方式以车辆标识或司机说明为准。', label:'小公交费用' },
+  { match:q=>/(小公交|校园公交|校园巴士|校车|摆渡车).*(路线|站点|怎么坐)/.test(q), itemId:'campus-shuttle-guide', text:'校园小公交只在校内运行。上车前先根据路线图、车辆标识或司机说明确认行驶方向和目的站，再乘车；路线覆盖校门、教学区、体育场、校医院和公寓等区域，班次与停靠站可能临时调整。校内学生参考票价 1 元/人，校外人士 2 元/人。', label:'乘坐方法' },
   { match:q=>/(生活用品|购物|超市|买东西)/.test(q), itemId:'campus-shopping-services', text:'日常用品可先去启航活动中心地下生活超市、公寓楼下生活超市或北体育场周边；大件和品类较多的用品也可到校外周边购买。', label:'生活用品' },
   { match:q=>/((被子|洗衣液|电话卡|手机卡).*(购买|怎么买|哪里买|统一)|买.*(被子|洗衣液|电话卡|手机卡))/.test(q), itemId:'campus-shopping-services', section:'入学采购怎么选' },
   { match:q=>/(快递|驿站|包裹|取件).*(哪里|地点|在哪)/.test(q), itemId:'campus-delivery', section:'常见取件区域' },
   { match:q=>/(收件地址|快递地址|寄到学校)/.test(q), itemId:'campus-delivery', section:'标准地址' },
-  { match:q=>/(中国银行|中行|银行卡).*(办理|办卡|哪里办|免费)/.test(q), itemId:'campus-banking-guide', section:'到校能否办理' },
+  { match:q=>/(中国银行|中行|银行卡).*(办理|办卡|哪里办|免费)/.test(q), itemId:'campus-banking-guide', text:'校内通常设有中国银行服务点，可免费办理银行卡，学校发放助学金等款项时也常使用中国银行账户。本人携带有效身份证件，按现场要求完成实名核验；具体地点、时间和材料以学校或银行通知为准。不要向个人支付代办费，也不要提供银行卡密码或短信验证码。', label:'中国银行办卡' },
   { match:q=>/(报到|报道).*(材料|带什么|准备)|录取通知书|个人档案/.test(q), itemId:'arrival-list', text:'重点准备录取通知书及通知书要求材料、本人有效身份证件、密封的党团关系和个人档案；办理助学贷款或困难认定的同学再带对应证明。', label:'报到材料' },
   { match:q=>/(哈尔滨站|哈站)/.test(q), itemId:'arrival-route', section:'哈尔滨站' },
   { match:q=>/(哈尔滨西站|哈西)/.test(q), itemId:'arrival-route', section:'哈尔滨西站' },
@@ -449,7 +449,7 @@ function focusedKnowledgeAnswer(question) {
     if(!items.some(entry=>entry.id===item.id)) items.push(item);
   });
   if(!points.length) return null;
-  return {html:`<ul>${points.join('')}</ul><em>费用、开放时间和办理规则以学校最新通知或现场提示为准。</em>`,hits:items.map(item=>({item,score:100}))};
+  return {html:`<ul>${points.join('')}</ul>`,hits:items.map(item=>({item,score:100}))};
 }
 function selectDetailedEvidence(chunks, question) {
   const candidates=chunks.filter(chunk=>chunk.score>=Math.max(10,chunks[0].score*.25));
