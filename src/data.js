@@ -83,7 +83,7 @@ export const guideItems = [
     id: 'anti-fraud', category: 'safety', title: '开学季防骗清单', priority: '必看', verified: '安全常识',
     summary: '“内部群、提前缴费、兼职刷单、冒充老师”是高频风险；先核实身份，再做操作。',
     content: ['不向陌生人提供身份证照片、验证码、银行卡密码', '班级群、家长群中新加入的“老师”也要通过官方渠道二次核实', '任何奖助学金、学费退款信息都不要点击陌生链接', '拒绝刷单返利、出租出售电话卡银行卡、代收不明包裹', '遇到紧急安全问题及时报警，并联系辅导员或学校保卫部门'],
-    source: '公安机关反诈宣传与校园安全常识', sourceUrl: 'https://www.mps.gov.cn/', updated: '2026-08-02', keywords: '诈骗 防骗 骗子 缴费 群 兼职 刷单 电话卡 银行卡 报警'
+    source: '政府公开安全宣传与校园反诈常识', sourceUrl: 'https://www.gov.cn/', updated: '2026-08-02', keywords: '诈骗 防骗 骗子 缴费 群 兼职 刷单 电话卡 银行卡 报警'
   }
 ];
 
