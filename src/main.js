@@ -72,7 +72,7 @@ app.innerHTML = `
     <section class="ask-section shell section" id="ask">
       <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>它只根据本站整理的知识库回答，并把参考条目列出来。遇到未收录或可能变化的信息，会建议你去对应官方渠道确认。</p><div class="sample-title">大家常问</div><div class="chips"><button>选课前要准备什么？</button><button>宿舍能用大功率电器吗？</button><button>怎么选择社团？</button><button>报到要带哪些材料？</button></div></div>
       <div class="chat-card">
-        <div class="chat-head"><div><span class="bot">H</span><b>启航助手</b><small><i></i> 本地知识库检索</small></div><button id="clear-chat" title="清空对话">↻</button></div>
+        <div class="chat-head"><div><span class="bot">H</span><b>启航助手</b><small><i></i> 本地 RAG · ${guideItems.length} 篇知识</small></div><button id="clear-chat" title="清空对话">↻</button></div>
         <div class="messages" id="messages"><div class="message bot-msg"><span class="bot">H</span><div>你好！我是启航助手 👋<br>你可以问我关于报到、选课、培养方案和校园生活的问题。<small>回答会附参考信息，请以最新官方通知为准。</small></div></div></div>
         <form id="ask-form"><input id="question" autocomplete="off" placeholder="例如：新生报到需要带什么？" /><button type="submit">发送 ↑</button></form>
       </div>
@@ -134,26 +134,74 @@ document.querySelector('#fake-submit').addEventListener('click',()=>{alert('感�
 
 const stopWords = new Set('的了是我你要有吗呢啊什么怎么如何一下可以能不能请问关于需要应该学校新生大学'.split(''));
 function tokens(text) { return [...new Set((text.toLowerCase().match(/[\u4e00-\u9fa5]{1,4}|[a-z0-9]+/g)||[]).flatMap(x=>x.length>2&&/[\u4e00-\u9fa5]/.test(x)?[x,...x.split('')]:[x]).filter(x=>!stopWords.has(x)))]; }
-function retrieve(query) {
+function legacyRetrieve(query) {
   const q = tokens(query);
   return guideItems.map(item=>{ const sectionText=item.sections?.map(section=>`${section.title} ${section.text}`).join(' ')||''; const hay=`${item.title} ${item.summary} ${item.keywords} ${item.content.join(' ')} ${sectionText}`.toLowerCase(); let score=0; q.forEach(t=>{if(hay.includes(t)) score+=t.length>1?3:1}); if(item.title.includes(query))score+=10; return {item,score}; }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
 }
-function answer(question) {
-  const hits=retrieve(question); if(!hits.length) return {html:`这个问题暂时不在本站知识库中，我不想猜测。建议你先查看学校官网或咨询辅导员、学院教学办公室。`,hits:[]};
+function legacyAnswer(question) {
+  const hits=legacyRetrieve(question); if(!hits.length) return {html:`这个问题暂时不在本站知识库中，我不想猜测。建议你先查看学校官网或咨询辅导员、学院教学办公室。`,hits:[]};
   const usefulHits=hits.filter((hit,index)=>index===0||hit.score>=hits[0].score*.55).slice(0,2);
   const details=usefulHits.flatMap((hit,index)=>hit.item.content.slice(0,index===0?5:2)).slice(0,7);
   const downloads=usefulHits.filter(hit=>hit.item.download).map(hit=>`<a class="chat-download" href="${hit.item.download.href}" download>↓ ${hit.item.download.label}（${hit.item.download.size}）</a>`).join('');
   const sourceNames=usefulHits.map(hit=>`“${hit.item.title}”`).join('和');
   return {html:`我检索了${sourceNames}，整理后的建议如下：<ul>${details.map(detail=>`<li>${detail}</li>`).join('')}</ul>${downloads}<em>信息状态：${usefulHits.map(hit=>hit.item.verified).join('；')}。涉及账号、支付、日期和管理政策时，请以 App 当前页面及学校最新通知为准。</em>`,hits};
 }
-function submitQuestion(q) {
+function legacySubmitQuestion(q) {
   if(!q.trim()) return; const box=document.querySelector('#messages');
   box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${q.replace(/[<>]/g,'')}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
-  setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=answer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${res.hits.length?`<div class="refs"><small>参考条目</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openGuide(b.dataset.open));box.scrollTop=box.scrollHeight;},550);
+  setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=legacyAnswer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${res.hits.length?`<div class="refs"><small>参考条目</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openGuide(b.dataset.open));box.scrollTop=box.scrollHeight;},550);
 }
 document.querySelector('#ask-form').addEventListener('submit',e=>{e.preventDefault();const input=document.querySelector('#question');submitQuestion(input.value);input.value=''});
 document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click',()=>submitQuestion(b.textContent)));
 document.querySelector('#clear-chat').addEventListener('click',()=>document.querySelector('#messages').innerHTML='<div class="message bot-msg"><span class="bot">H</span><div>对话已清空。还有什么想了解的？</div></div>');
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.querySelector('#ask').scrollIntoView({behavior:'smooth'});document.querySelector('#question').focus()}});
+// Local RAG engine: chunk -> retrieve -> grounded answer.
+const ragStopWords = new Set(['的','了','是','我','你','要','有','吗','呢','啊','什么','怎么','如何','一下','可以','能不能','请问','关于','需要','应该','学校','新生','大学','帮我','问题','完全','没有','收录']);
+const ragSynonymGroups = [
+  ['工科数学分析','高数','数学分析','数分'], ['移动校园','校园app','校园 APP','缴费','校园卡充值'],
+  ['校园网','wifi','无线网','网络','HEU-AUTO','HEU-WLAN'], ['快递','邮寄','驿站','取件'], ['公交','校车','接站'],
+  ['宿舍','公寓','寝室'], ['PPT','模板','答辩','汇报'], ['VPN','校外访问','内网'],
+  ['助学贷款','贷款回执','受理证明'], ['浴池','洗澡','洗浴']
+];
+function ragNormalize(value) { return String(value || '').toLowerCase().replace(/[“”‘’、，。！？：；（）【】《》\s]/g,''); }
+function ragTokens(value) {
+  const normalized=ragNormalize(value); const pieces=normalized.match(/[\u4e00-\u9fa5]{1,6}|[a-z0-9]+/g)||[]; const result=[];
+  pieces.forEach(piece=>{ if(!ragStopWords.has(piece)) result.push(piece); if(piece.length>2&&/[\u4e00-\u9fa5]/.test(piece)){ for(let i=0;i<piece.length-1;i++) result.push(piece.slice(i,i+2)); } });
+  return [...new Set(result.filter(token=>(token.length>1||/[a-z0-9]/.test(token))&&!ragStopWords.has(token)))];
+}
+function ragExpand(tokens) {
+  const expanded=new Set(tokens); const joined=tokens.join('');
+  ragSynonymGroups.forEach(group=>{ if(group.some(term=>joined.includes(ragNormalize(term))||tokens.some(token=>ragNormalize(term).includes(token)))) group.forEach(term=>expanded.add(ragNormalize(term))); });
+  return [...expanded];
+}
+const ragChunks = guideItems.flatMap(item => {
+  const chunks=[{text:item.summary,type:'摘要'}];
+  item.content.forEach((text,index)=>chunks.push({text,type:`要点 ${index+1}`}));
+  (item.sections||[]).forEach(section=>chunks.push({text:`${section.title}：${section.text}`,type:section.title}));
+  return chunks.map(chunk=>({item,...chunk,hay:ragNormalize(`${item.title} ${item.keywords} ${chunk.text}`)}));
+});
+function retrieve(query) {
+  const normalized=ragNormalize(query); const terms=ragExpand(ragTokens(query));
+  const scored=ragChunks.map(chunk=>{ let score=0; if(normalized&&ragNormalize(chunk.item.title).includes(normalized)) score+=30; if(normalized&&chunk.hay.includes(normalized)) score+=12;
+    terms.forEach(term=>{if(chunk.hay.includes(term)) score += term.length>=4 ? 7 : 3; if(ragNormalize(chunk.item.title).includes(term)) score+=8; if(ragNormalize(chunk.item.keywords).includes(term)) score+=4;});
+    return {...chunk,score}; }).filter(chunk=>chunk.score>0).sort((a,b)=>b.score-a.score);
+  const selected=[]; const perItem=new Map(); scored.forEach(chunk=>{const count=perItem.get(chunk.item.id)||0; if(count<2){selected.push(chunk);perItem.set(chunk.item.id,count+1);}});
+  return selected.slice(0,6);
+}
+function answer(question) {
+  const chunks=retrieve(question); if(!chunks.length||chunks[0].score<10) return {html:'这个问题暂时没有足够的知识库证据，我不想猜测。你可以换一种说法，或查看学校官网、本科生院和学院教学办公室的最新通知。',hits:[]};
+  const topScore=chunks[0].score; const confidence=topScore>=35?'高':topScore>=18?'中':'待确认';
+  const docs=[]; const seenDocs=new Set(); chunks.forEach(chunk=>{if(!seenDocs.has(chunk.item.id)){docs.push(chunk.item);seenDocs.add(chunk.item.id);}});
+  const evidence=chunks.slice(0,5).map(chunk=>`<li>${chunk.text}</li>`).join('');
+  const downloads=docs.filter(item=>item.download).map(item=>`<a class="chat-download" href="${item.download.href}" download>↓ ${item.download.label}（${item.download.size}）</a>`).join('');
+  const status=[...new Set(docs.map(item=>item.verified))].join('；');
+  return {html:`我从 ${docs.slice(0,2).map(item=>`“${item.title}”`).join('、')} 中检索到相关信息：<ul>${evidence}</ul>${downloads}<em>检索置信度：${confidence}。信息状态：${status}。涉及账号、支付、日期和管理政策时，请以学校最新通知为准。</em>`,hits:docs.map(item=>({item,score:chunks.filter(chunk=>chunk.item.id===item.id).reduce((sum,chunk)=>sum+chunk.score,0)}))};
+}
+function saveQuestionStat(question) { try { const key='heu-rag-question-stats'; const stats=JSON.parse(localStorage.getItem(key)||'{}'); const normalized=ragNormalize(question).slice(0,40); if(normalized) stats[normalized]=(stats[normalized]||0)+1; localStorage.setItem(key,JSON.stringify(stats)); } catch (_) {} }
+function submitQuestion(q) {
+  if(!q.trim()) return; saveQuestionStat(q); const box=document.querySelector('#messages'); box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${q.replace(/[<>]/g,'')}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
+  setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=answer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;},420);
+}
 renderGuides();
+export { retrieve, answer };
 renderMaps();
