@@ -189,6 +189,7 @@ const ragSynonymGroups = [
   ['吃饭','用餐','就餐','食堂','饭堂','餐厅','大美食堂','大美','小美食堂','小美','小美夜餐','夜餐','至美餐厅','至美','天美','快乐食间','早餐','午饭','晚饭','营业时间','开门','关门'], ['购物','买东西','超市','生活超市','生活用品','新生采购','入学采购','集体售卖','统一购买','被子','被褥','床品','洗衣液','电话卡','手机卡','sim卡','运营商','网购','网上购买','启航活动中心','启航地下','北体育场','北体','公寓楼下','剪头','剪头发','理发','修手机','手机维修','买水果'], ['外卖','外送','叫外卖','点外卖','送餐','取餐','外卖柜','取餐柜','东门','北门','南门'], ['打印','复印','印刷','打印店','21b','21B','PDF','装订'], ['教材','课本','书本','二手书','书店'], ['图书馆','借书','借阅','馆藏','索书号'],
   ['快递','快递站','邮寄','驿站','蜂巢','丰巢','启航蜂巢','取件','收件','包裹','寄行李','行李'], ['公交','校车','小公交','校园巴士','巴士','摆渡车','接驳车','接站'],
   ['PPT','模板','答辩','汇报','演示'],
+  ['哈尔滨工程大学','哈工程','HEU','学校介绍','学校简介','学校概况','了解哈工程'], ['哈军工','军事工程学院','哈船院','哈尔滨船舶工程学院','校史','历史沿革'], ['三海一核','船舶工业','海军装备','海洋开发','核能应用'], ['大工至善','大学至真','校训','校风','教风','学风'], ['哈工大','哈尔滨工业大学','HIT','学校区别','校名区别'],
   ['贷款','借贷','借款','助学贷款','国家助学贷款','国家助贷','国助贷','助贷','学生贷款','生源地贷款','生源地助学贷款','生源地信用助学贷款','校园地贷款','校园地助学贷款','校园地国家助学贷款','开发银行贷款','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','绿色通道','不交学费','交不起学费','没钱交学费','暂缓缴费','缓交学费','欠学费','贷款扣学费','贷款抵学费','学费抵扣'],
   ['奖学金','助学金','奖助学金','国家奖学金','国奖','国家励志奖学金','国励','励志奖学金','国家助学金','国防科技奖学金','优秀学生奖学金','社会奖学金','评奖评优'],
   ['困难生','家庭经济困难','困难认定','贫困认定','贫困生','智慧学工','困难生认定'], ['社团','学生组织','学生会','招新','百团'],
@@ -215,6 +216,7 @@ const ragRelations = [
   { triggers:['选课','课表'], expands:['教务系统','培养方案','必修','选修','学分','退补选','时间冲突'] },
   { triggers:['宿舍','寝室','公寓'], expands:['床位','上床下桌','卫生间','空调','供暖','用电','洗浴','报修','门禁'] },
   { triggers:['校园网','wifi','联网'], expands:['HEU-AUTO','HEU-WLAN','学号','统一身份认证','PEAP','VPN','终端','报修'] },
+  { triggers:['哈工程','哈尔滨工程大学','HEU','哈军工','校史','校训','三海一核','211','双一流'], expands:['工业和信息化部','工信部直属','学校简介','历史沿革','大工至善','大学至真','船舶与海洋工程','人才培养','科研平台'] },
   { triggers:['缴费','支付','学费'], expands:['移动校园','财务服务','订单','扣款','官方入口','验证码','诈骗'] }
 ];
 const ragIntentProfiles = [
@@ -253,7 +255,7 @@ const ragTopicItemRules = [
   { terms:['社团','学生组织','学生会','招新','百团'], itemIds:['clubs-join'] },
   { terms:['诈骗','防骗','反诈','刷单','冒充老师'], itemIds:['anti-fraud'] },
   { terms:['ppt','模板','答辩模板','汇报模板'], itemIds:['heu-ppt-templates'] },
-  { terms:['校史','校训','哈军工','军工精神','三海一核','优势学科'], itemIds:['heu-basics'] }
+  { terms:['哈工程','哈尔滨工程大学','heu','学校介绍','学校简介','学校概况','校史','历史沿革','校训','哈军工','军工精神','三海一核','优势学科','强势专业','211','双一流','工信部','科研平台','人才培养','师资','学校地址','南通大街','哈工大区别'], itemIds:['heu-basics'] }
 ];
 function ragNormalize(value) { return String(value || '').toLowerCase().replace(/[“”‘’、，。！？：；（）【】《》\s\-_/]/g,''); }
 function ragTokens(value) {
@@ -296,7 +298,7 @@ function retrieve(query) {
     if((normalized.includes('用途')||normalized.includes('功能')||normalized.includes('有哪些'))&&chunk.type==='摘要') score+=18;
     if((normalized.includes('丢了')||normalized.includes('丢卡')||normalized.includes('遗失'))&&chunk.textHay.includes('挂失')) score+=32;
     if(intent.id==='time'&&(/[0-9]{1,2}[:：][0-9]{2}/.test(chunk.text)||chunk.type.includes('时间'))) score+=20;
-    if(normalized.includes('校训')&&chunk.textHay.includes('大学至真大工至善')) score+=55;
+    if(normalized.includes('校训')&&chunk.textHay.includes('大工至善大学至真')) score+=55;
     if((normalized.includes('哈军工精神')||normalized.includes('军工精神'))&&chunk.textHay.includes('哈军工精神')) score+=55;
     if((normalized.includes('成立')||normalized.includes('哪年')||normalized.includes('建校'))&&chunk.textHay.includes('1953')) score+=45;
     if((normalized.includes('学科')||normalized.includes('专业实力')||normalized.includes('优势学科'))&&chunk.textHay.includes('三海一核')) score+=35;
@@ -326,16 +328,28 @@ function retrieve(query) {
 }
 function schoolFactAnswer(question) {
   const normalized=ragNormalize(question); const item=guideItems.find(entry=>entry.id==='heu-basics'); if(!item) return null;
+  const mentionsHeu=/(哈工程|哈尔滨工程大学|heu)/.test(normalized);
+  if(/(哈工大|哈尔滨工业大学|hit)/.test(normalized)&&!mentionsHeu) return null;
   const facts=[];
+  const asksOverview=(normalized==='哈工程'||normalized==='哈尔滨工程大学'||normalized==='heu')||(mentionsHeu&&/(介绍|了解|简介|概况|基本情况|什么样|怎么样|怎样|是什么)/.test(normalized));
+  if(asksOverview) facts.push(item.content[3],item.content[0],item.content[4],item.content[8]);
   if(normalized.includes('校训')) facts.push(item.content[1]);
-  if(normalized.includes('哈军工')||normalized.includes('军工精神')) facts.push(item.content[2]);
+  if(normalized.includes('校风')||normalized.includes('教风')||normalized.includes('学风')||normalized.includes('校园文化')) facts.push(item.content[1],item.content[2]);
+  if(normalized.includes('哈军工')||normalized.includes('军工精神')||normalized.includes('优良传统')) facts.push(item.content[2]);
   if(normalized.includes('成立')||normalized.includes('哪年')||normalized.includes('建校')||normalized.includes('历史')||normalized.includes('校史')) facts.push(item.content[0]);
-  if(normalized.includes('学科')||normalized.includes('专业实力')||normalized.includes('优势学科')||normalized.includes('三海一核')) facts.push(item.content[3],item.content[4]);
+  if(/(工信部|直属|211|双一流|重点大学|学校性质|什么层次|共建)/.test(normalized)) facts.push(item.content[3]);
+  if(/(学科|专业实力|优势学科|强势专业|王牌专业|三海一核|船舶|水声|控制|核科学|动力|信息与通信)/.test(normalized)) facts.push(item.content[4],item.content[6]);
+  if(/(英文名|英文名称|英文缩写|简称|学校地址|在哪|校址|南通大街|青岛|烟台|三亚|校区)/.test(normalized)) facts.push(item.content[5]);
+  if(/(科研|实验室|科研平台|创新平台|研究能力)/.test(normalized)) facts.push(item.content[7]);
+  if(/(人才培养|培养特色|本科专业|博士点|硕士点|博士后|工程教育)/.test(normalized)) facts.push(item.content[6],item.content[8]);
+  if(/(师资|老师|教师|学生规模|学校规模|多少学生|多少老师)/.test(normalized)) facts.push(item.content[9]);
+  if(/(哈工大|哈尔滨工业大学|学校区别|校名区别|有什么区别)/.test(normalized)&&/(哈工程|哈尔滨工程大学|heu)/.test(normalized)) facts.push(item.content[10]);
   if(!facts.length) return null;
-  return {html:`关于哈工程，这几条可以先记住：<ul>${facts.map(fact=>`<li>${escapeHtml(fact)}</li>`).join('')}</ul><em>这是一份面向新生的基础介绍，表述以学校官网最新信息为准。</em>`,hits:[{item,score:100}]};
+  const selected=[...new Set(facts)].slice(0,5);
+  return {html:`关于哈工程，可以先抓住这些重点：<ul>${selected.map(fact=>`<li>${escapeHtml(fact)}</li>`).join('')}</ul><em>学校规模、专业和平台数量会调整，动态信息以学校官网和当届目录为准。</em>`,hits:[{item,score:100}]};
 }
 function hasSpecificQuestionAnchor(question) {
-  const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','饭卡','一卡通','餐卡','澡卡','校园码','充值','余额','挂失','补卡','电费','宿舍电费','公寓电费','电费账号','房间账号','gy0','欠费','断电','电费分摊','中国银行','中行','银行卡','储蓄卡','贷款','助贷','国家助贷','国助贷','学生贷款','生源地助学贷款','校园地助学贷款','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','绿色通道','不交学费','暂缓缴费','缓交学费','贷款扣学费','贷款抵学费','奖学金','助学金','奖助学金','国家奖学金','国奖','国家励志','国励','国防科技奖学金','困难生','家庭经济困难','困难认定','贫困认定','智慧学工','校园网','无线','wifi','网费','网络费','宽带费','上网费','充网费','缴网费','网费账号','宿舍','寝室','独卫','四人寝','四人间','上床下桌','阳台','查寝','厕所热水','卫生间热水','洗手池热水','宿舍热水','冷水','热水间','开水房','洗澡','洗浴','浴池','澡堂','北方澡堂','南方人洗澡','南方新生洗澡','隔间','无隔间','没有隔间','隐私','洗衣机','洗衣','吹风机','吹头发','快递','包裹','取件','驿站','社团','诈骗','哈军工','校训','学科','赞噢','集市','吃饭','食堂','餐厅','大美','小美','至美','快乐食间','小公交','校车','校园巴士','巴士','摆渡车','接驳车','购物','超市','新生采购','入学采购','集体售卖','统一购买','被子','被褥','床品','洗衣液','电话卡','手机卡','sim卡','网购','启航','北体育场','北体','剪头','理发','修手机','水果','外卖','外送','取餐','打印','复印','21b','教材','课本','二手书','图书馆','借书','借阅'];
+  const normalized=ragNormalize(question); const anchors=['报到','材料','路线','机场','火车站','选课','培养方案','校园卡','饭卡','一卡通','餐卡','澡卡','校园码','充值','余额','挂失','补卡','电费','宿舍电费','公寓电费','电费账号','房间账号','gy0','欠费','断电','电费分摊','中国银行','中行','银行卡','储蓄卡','贷款','助贷','国家助贷','国助贷','学生贷款','生源地助学贷款','校园地助学贷款','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','绿色通道','不交学费','暂缓缴费','缓交学费','贷款扣学费','贷款抵学费','奖学金','助学金','奖助学金','国家奖学金','国奖','国家励志','国励','国防科技奖学金','困难生','家庭经济困难','困难认定','贫困认定','智慧学工','校园网','无线','wifi','网费','网络费','宽带费','上网费','充网费','缴网费','网费账号','宿舍','寝室','独卫','四人寝','四人间','上床下桌','阳台','查寝','厕所热水','卫生间热水','洗手池热水','宿舍热水','冷水','热水间','开水房','洗澡','洗浴','浴池','澡堂','北方澡堂','南方人洗澡','南方新生洗澡','隔间','无隔间','没有隔间','隐私','洗衣机','洗衣','吹风机','吹头发','快递','包裹','取件','驿站','社团','诈骗','哈工程','哈尔滨工程大学','heu','学校介绍','学校简介','学校概况','哈军工','军工精神','校训','校风','教风','学风','校史','历史沿革','三海一核','211','双一流','工信部','学科','优势学科','强势专业','科研平台','实验室','人才培养','师资','学校地址','哈工大区别','赞噢','集市','吃饭','食堂','餐厅','大美','小美','至美','快乐食间','小公交','校车','校园巴士','巴士','摆渡车','接驳车','购物','超市','新生采购','入学采购','集体售卖','统一购买','被子','被褥','床品','洗衣液','电话卡','手机卡','sim卡','网购','启航','北体育场','北体','剪头','理发','修手机','水果','外卖','外送','取餐','打印','复印','21b','教材','课本','二手书','图书馆','借书','借阅'];
   return anchors.some(anchor=>normalized.includes(ragNormalize(anchor)));
 }
 function otherSchoolFallback(question) {
@@ -512,8 +526,8 @@ function greetingAnswer(question) {
 function answer(question) {
   const greeting=greetingAnswer(question); if(greeting) return greeting;
   const unsafeAnswer=unsafeRequestFallback(question); if(unsafeAnswer) return unsafeAnswer;
-  const otherSchoolAnswer=otherSchoolFallback(question); if(otherSchoolAnswer) return otherSchoolAnswer;
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
+  const otherSchoolAnswer=otherSchoolFallback(question); if(otherSchoolAnswer) return otherSchoolAnswer;
   const mapAnswer=mapLocationAnswer(question); if(mapAnswer) return mapAnswer;
   const loanAnswer=studentLoanDirectAnswer(question); if(loanAnswer) return loanAnswer;
   const studyServicesAnswer=studyServicesDirectAnswer(question); if(studyServicesAnswer) return studyServicesAnswer;
