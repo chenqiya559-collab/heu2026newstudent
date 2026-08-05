@@ -344,11 +344,11 @@ function unsafeRequestFallback(question) {
   const normalized=ragNormalize(question);
   const defensiveContext=/(防骗|反诈|预防|避免|识别|举报|报警|被骗|被盗|受害|求助|保护|安全吗|风险|怎么办|补救|找回|申诉|合法|合规)/.test(normalized);
   if(defensiveContext) return null;
-  const harmfulAction=/(怎么|如何|教程|步骤|方法|帮我|教我|制作|实施|操作|绕过|逃避|规避|隐藏|销毁|入侵|破解|盗取|骗取|骗|伪造|套取|套现|洗钱|下毒|伤害|代写|作弊|买答案|改成绩|走后门|贿赂)/.test(question);
-  const harmfulTopic=/(诈骗|骗钱|骗贷款|骗取贷款|骗.*(贷款|助学金)|套取贷款|冒领助学贷款|盗窃|偷窃|抢劫|洗钱|套现|伪造.*(证明|材料|回执)|假证明|假材料|冒充老师|盗号|破解密码|入侵系统|绕过门禁|逃避查寝|逃避处分|考试作弊|论文代写|作业代写|买答案|篡改成绩|改成绩|走后门|贿赂|毒品|管制刀具|爆炸物|伤人|杀人)/.test(normalized);
+  const harmfulAction=/(怎么|如何|教程|步骤|方法|帮我|教我|制作|实施|操作|绕过|逃避|规避|隐藏|销毁|入侵|破解|盗取|骗取|骗|伪造|套取|套现|洗钱|下毒|伤害|代写|作弊|买答案|改成绩|走后门|贿赂|我想|我要|准备|打算|能不能)/.test(question);
+  const harmfulTopic=/(诈骗|骗钱|骗贷款|骗取贷款|骗.*(贷款|助学金)|套取贷款|冒领助学贷款|盗窃|偷窃|抢劫|洗钱|套现|伪造.*(证明|材料|回执)|假证明|假材料|冒充老师|盗号|(入侵|破解).*(账号|密码|系统|校园网|教务|网站)|绕过.*(认证|系统|门禁|校园网|查寝|处分)|逃避查寝|逃避处分|考试作弊|论文代写|作业代写|买答案|篡改成绩|改成绩|走后门|贿赂|毒品|管制刀具|爆炸物|伤人|杀人)/.test(normalized);
   if(!harmfulAction||!harmfulTopic) return null;
   const safety=guideItems.find(item=>item.id==='anti-fraud');
-  return {html:'这个请求涉及违法、伤害他人、欺骗或规避校园安全管理，我不能提供做法、步骤或帮助。可以换成合法方向来问，例如如何防骗、保护账号、补交真实材料、申诉处理，或联系辅导员、保卫部门和警方解决。<em>遇到正在发生的人身危险或财产损失，请立即报警并联系学校保卫部门。</em>',hits:safety?[{item:safety,score:100}]:[]};
+  return {html:'这个请求涉及违法、伤害他人、欺骗或规避校园安全管理，我不能提供做法、步骤或帮助。可以换成合法方向来问，例如如何防骗、保护账号、补交真实材料、申诉处理，或联系辅导员、保卫部门和警方解决。<em>遇到正在发生的人身危险或财产损失，请立即报警并联系学校保卫部门。</em>',hits:safety?[{item:safety,score:100}]:[],safetyViolation:true,localOnly:true};
 }
 function studentLoanDirectAnswer(question) {
   const normalized=ragNormalize(question);
@@ -504,22 +504,34 @@ function buildAiKnowledge(question, localResult) {
   return [`【本地直接回答】${htmlToPlainText(localResult.html)}`,...evidence].join('\n');
 }
 async function requestAiAnswer(question, localResult) {
-  const nextAt=Number(localStorage.getItem('heu-ai-next-question')||0); const remaining=Math.ceil((nextAt-Date.now())/1000);
-  if(remaining>0){const error=new Error('AI cooldown');error.retryAfter=remaining;throw error;}
   const controller=new AbortController(); const timeout=setTimeout(()=>controller.abort(),15000);
   try {
     const response=await fetch('./api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,localKnowledge:buildAiKnowledge(question,localResult)}),signal:controller.signal});
-    if(response.status===429){const data=await response.json().catch(()=>({}));const error=new Error('AI cooldown');error.retryAfter=data.retryAfter||180;throw error;}
     if(!response.ok) throw new Error(`AI request failed: ${response.status}`);
     const data=await response.json(); if(!data.answer) throw new Error('AI returned an empty answer');
-    localStorage.setItem('heu-ai-next-question',String(Date.now()+180000));
     return escapeHtml(data.answer).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
   } finally { clearTimeout(timeout); }
 }
+const SAFETY_STRIKE_KEY='heu-safety-strikes';
+const SAFETY_LOCK_KEY='heu-safety-lock-until';
+function safetyLockRemaining() {
+  const remaining=Math.ceil((Number(localStorage.getItem(SAFETY_LOCK_KEY)||0)-Date.now())/1000);
+  if(remaining<=0){localStorage.removeItem(SAFETY_LOCK_KEY);return 0;}
+  return remaining;
+}
+function resetSafetyStrikes() { localStorage.removeItem(SAFETY_STRIKE_KEY); }
+function registerSafetyViolation() {
+  const strikes=Number(localStorage.getItem(SAFETY_STRIKE_KEY)||0)+1;
+  if(strikes>3){localStorage.removeItem(SAFETY_STRIKE_KEY);localStorage.setItem(SAFETY_LOCK_KEY,String(Date.now()+180000));return {locked:true,strikes};}
+  localStorage.setItem(SAFETY_STRIKE_KEY,String(strikes));return {locked:false,strikes};
+}
 async function submitQuestion(q) {
   if(!q.trim()) return; saveQuestionStat(q); renderPopularQuestions(); const box=document.querySelector('#messages'); box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${escapeHtml(q)}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
+  const remaining=safetyLockRemaining();
+  if(remaining>0){document.querySelector('.typing')?.remove();box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>由于连续多次询问违法或违规内容，本轮对话已暂停。请在约 ${Math.ceil(remaining/60)} 分钟后重新提问；恢复后可以继续咨询正常的新生问题。</div></div>`);box.scrollTop=box.scrollHeight;return;}
   const res=answer(q); let responseHtml=res.html;
-  if(!res.localOnly) try { responseHtml=await requestAiAnswer(q,res); } catch (error) { if(error.retryAfter) responseHtml+=`<em>智能增强正在冷却，约 ${Math.ceil(error.retryAfter/60)} 分钟后刷新可再次调用；当前内容由本地知识库直接回答。</em>`; }
+  if(res.safetyViolation){const state=registerSafetyViolation();if(state.locked)res.hits=[];responseHtml=state.locked?'已连续超过 3 次询问违法或违规内容，本轮对话暂停 3 分钟。冷却结束后可以重新咨询正常的新生问题。':`${responseHtml}<em>不合规提问提醒：${state.strikes}/3。若继续连续询问此类内容，下一次将暂停回答 3 分钟。</em>`;}
+  else if(!res.localOnly){resetSafetyStrikes();try { responseHtml=await requestAiAnswer(q,res); } catch (_) { /* AI failures use the local knowledge answer. */ }}
   document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;
 }
 renderGuides();
