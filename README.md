@@ -66,3 +66,17 @@ npm run build
 7. 持续优化移动端、无障碍支持和低网速环境下的资源加载。
 
 校园地图部分使用真实校园图作为底图，由 AI 辅助完成分类、关键词标注、检索入口和移动端呈现，避免生成式地图造成建筑位置失真。
+
+## Vercel AI 配置
+
+项目在 Vercel 部署后可通过 Serverless API 调用 DeepSeek。进入 Vercel 项目的 `Settings -> Environment Variables`，添加：
+
+```text
+AI_API_KEY=你的 API 密钥
+AI_BASE_URL=https://api.deepseek.com
+AI_MODEL=deepseek-chat
+```
+
+保存后重新部署。密钥只配置在 Vercel，不能写入前端代码或提交到 GitHub。未配置密钥、接口超时或继续使用 GitHub Pages 时，助手会自动使用本地知识库回答。
+
+豆包方舟也可使用同一接口，将 `AI_BASE_URL` 改为 `https://ark.cn-beijing.volces.com/api/v3`，`AI_MODEL` 填写方舟控制台创建的推理接入点 ID，并使用对应的 `AI_API_KEY`。

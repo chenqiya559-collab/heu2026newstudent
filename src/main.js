@@ -490,9 +490,23 @@ function answer(question) {
 }
 function saveQuestionStat(question) { try { const key='heu-rag-question-stats'; const stats=JSON.parse(localStorage.getItem(key)||'{}'); const normalized=ragNormalize(question).slice(0,40); if(normalized) stats[normalized]=(stats[normalized]||0)+1; localStorage.setItem(key,JSON.stringify(stats)); } catch (_) {} }
 function renderPopularQuestions() { try { const stats=JSON.parse(localStorage.getItem('heu-rag-question-stats')||'{}'); const entries=Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,3); const target=document.querySelector('#popular-questions'); if(target) target.innerHTML=entries.length?entries.map(([question,count])=>`<button data-popular-question="${escapeHtml(question)}">${escapeHtml(question)} <small>${count} 次</small></button>`).join(''):'提问后会在本机匿名汇总，帮助后续补充知识库'; target?.querySelectorAll('[data-popular-question]').forEach(button=>button.addEventListener('click',()=>submitQuestion(button.dataset.popularQuestion))); } catch (_) {} }
-function submitQuestion(q) {
+function htmlToPlainText(html) {
+  const node=document.createElement('div'); node.innerHTML=html; return (node.textContent||'').replace(/\s+/g,' ').trim();
+}
+async function requestAiAnswer(question, localResult) {
+  const controller=new AbortController(); const timeout=setTimeout(()=>controller.abort(),15000);
+  try {
+    const response=await fetch('./api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,localKnowledge:htmlToPlainText(localResult.html)}),signal:controller.signal});
+    if(!response.ok) throw new Error(`AI request failed: ${response.status}`);
+    const data=await response.json(); if(!data.answer) throw new Error('AI returned an empty answer');
+    return escapeHtml(data.answer).replace(/\n/g,'<br>');
+  } finally { clearTimeout(timeout); }
+}
+async function submitQuestion(q) {
   if(!q.trim()) return; saveQuestionStat(q); renderPopularQuestions(); const box=document.querySelector('#messages'); box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${escapeHtml(q)}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
-  setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=answer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;},420);
+  const res=answer(q); let responseHtml=res.html;
+  try { responseHtml=await requestAiAnswer(q,res); } catch (_) { /* GitHub Pages and API failures use the local knowledge answer. */ }
+  document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;
 }
 renderGuides();
 renderPopularQuestions();
