@@ -1,0 +1,12 @@
+.git
+.github
+.agents
+.venv
+.vscode
+.vercel
+node_modules
+dist
+tmp
+build
+.env*
+*.log
