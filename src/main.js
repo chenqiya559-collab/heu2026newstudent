@@ -201,7 +201,7 @@ const ragSynonymGroups = [
   ['吃饭','用餐','就餐','食堂','饭堂','餐厅','大美食堂','大美','小美食堂','小美','至美餐厅','至美','快乐食间','早餐','午饭','晚饭'], ['购物','买东西','超市','生活超市','生活用品','新生采购','入学采购','集体售卖','统一购买','被子','被褥','床品','洗衣液','电话卡','手机卡','sim卡','运营商','网购','网上购买','启航活动中心','启航地下','北体育场','北体','公寓楼下','剪头','剪头发','理发','修手机','手机维修','买水果'], ['外卖','外送','叫外卖','点外卖','送餐','取餐','外卖柜','取餐柜','东门','北门','南门'], ['打印','复印','印刷','打印店','21b','21B','PDF','装订'], ['教材','课本','书本','二手书','书店'], ['图书馆','借书','借阅','馆藏','索书号'],
   ['快递','邮寄','驿站','取件','收件','包裹','寄行李','行李'], ['公交','校车','小公交','校园巴士','巴士','摆渡车','接驳车','接站'],
   ['PPT','模板','答辩','汇报','演示'],
-  ['贷款','助学贷款','国家助学贷款','国家助贷','国助贷','助贷','学生贷款','生源地贷款','生源地助学贷款','生源地信用助学贷款','校园地贷款','校园地助学贷款','校园地国家助学贷款','开发银行贷款','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','绿色通道','不交学费','暂缓缴费','缓交学费','欠学费','贷款扣学费','贷款抵学费','学费抵扣'],
+  ['贷款','借贷','借款','助学贷款','国家助学贷款','国家助贷','国助贷','助贷','学生贷款','生源地贷款','生源地助学贷款','生源地信用助学贷款','校园地贷款','校园地助学贷款','校园地国家助学贷款','开发银行贷款','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','绿色通道','不交学费','交不起学费','没钱交学费','暂缓缴费','缓交学费','欠学费','贷款扣学费','贷款抵学费','学费抵扣'],
   ['奖学金','助学金','奖助学金','国家奖学金','国奖','国家励志奖学金','国励','励志奖学金','国家助学金','国防科技奖学金','优秀学生奖学金','社会奖学金','评奖评优'],
   ['困难生','家庭经济困难','困难认定','贫困认定','贫困生','智慧学工','困难生认定'], ['社团','学生组织','学生会','招新','百团'],
   ['诈骗','防骗','骗局','刷单','陌生链接','冒充老师','缴费诈骗']
@@ -209,7 +209,7 @@ const ragSynonymGroups = [
 const ragRelations = [
   { triggers:['校园卡','饭卡'], expands:['用途','食堂','吃饭','充值','余额','宿舍电费','缴电费','洗浴','浴池','卡槽','放水','扣费','挂失','校园码'] },
   { triggers:['中国银行','中行','银行卡','助学金','奖学金'], expands:['校内银行','办卡','免费办理','发放账户','实名','身份证','银行卡安全'] },
-  { triggers:['贷款','助贷','首贷','续贷','生源地贷款','校园地贷款','贷款回执','回执码','受理证明'], expands:['国家助学贷款','学费','住宿费','绿色通道','回执','辅导员','资助部门','不要重复缴费','当年通知'] },
+  { triggers:['贷款','借贷','借款','助贷','首贷','续贷','生源地贷款','校园地贷款','贷款回执','回执码','受理证明','交不起学费','没钱交学费'], expands:['国家助学贷款','国家助学金','困难生认定','学费','住宿费','绿色通道','回执','辅导员','资助部门','不要重复缴费','当年通知'] },
   { triggers:['奖学金','助学金','国奖','国励','国家励志'], expands:['申请','评定','家庭经济困难','国家助学金','国家奖学金','学院通知','当年标准'] },
   { triggers:['困难生','家庭经济困难','困难认定','贫困认定','智慧学工'], expands:['自愿申请','一般困难','特别困难','国家助学金','辅导员','隐私','当年通知'] },
   { triggers:['吃饭','食堂','餐厅','大美','小美','至美','快乐食间'], expands:['大美食堂','小美食堂','至美餐厅','快乐食间','校园卡','电子校园卡','校园码','校园地图','位置'] },
@@ -258,6 +258,7 @@ const ragTopicItemRules = [
   { terms:['移动校园','heu校园','校园app','财务服务','缴学费'], itemIds:['heu-mobile-campus'] },
   { terms:['赞噢','校园集市','集市'], itemIds:['zanou-campus-market'] },
   { terms:['助学贷款','国家助贷','国助贷','生源地贷款','校园地贷款','贷款回执','受理证明'], itemIds:['student-loan-guide'] },
+  { terms:['贷款','借贷','借款','交不起学费','没钱交学费','家庭经济困难','经济困难'], itemIds:['student-loan-guide','scholarships-grants-guide','financial-hardship-identification'] },
   { terms:['奖学金','助学金','奖助学金','国家奖学金','国奖','国家励志','国励','国防科技奖学金'], itemIds:['scholarships-grants-guide'] },
   { terms:['困难生','家庭经济困难','困难认定','贫困认定','贫困生','智慧学工'], itemIds:['financial-hardship-identification'] },
   { terms:['社团','学生组织','学生会','招新','百团'], itemIds:['clubs-join'] },
@@ -361,24 +362,32 @@ function unsafeRequestFallback(question) {
   const normalized=ragNormalize(question);
   const defensiveContext=/(防骗|反诈|预防|避免|识别|举报|报警|被骗|被盗|受害|求助|保护|安全吗|风险|怎么办|补救|找回|申诉|合法|合规)/.test(normalized);
   if(defensiveContext) return null;
-  const harmfulAction=/(怎么|如何|教程|步骤|方法|帮我|教我|制作|实施|操作|绕过|逃避|规避|隐藏|销毁|入侵|破解|盗取|骗取|骗|伪造|套取|套现|洗钱|下毒|伤害)/.test(question);
-  const harmfulTopic=/(诈骗|骗钱|骗贷款|骗取贷款|套取贷款|冒领助学贷款|盗窃|偷窃|抢劫|洗钱|套现|伪造证明|假证明|假材料|冒充老师|盗号|破解密码|入侵系统|绕过门禁|逃避查寝|逃避处分|毒品|管制刀具|爆炸物|伤人|杀人)/.test(normalized);
+  const harmfulAction=/(怎么|如何|教程|步骤|方法|帮我|教我|制作|实施|操作|绕过|逃避|规避|隐藏|销毁|入侵|破解|盗取|骗取|骗|伪造|套取|套现|洗钱|下毒|伤害|代写|作弊|买答案|改成绩|走后门|贿赂)/.test(question);
+  const harmfulTopic=/(诈骗|骗钱|骗贷款|骗取贷款|骗.*(贷款|助学金)|套取贷款|冒领助学贷款|盗窃|偷窃|抢劫|洗钱|套现|伪造.*(证明|材料|回执)|假证明|假材料|冒充老师|盗号|破解密码|入侵系统|绕过门禁|逃避查寝|逃避处分|考试作弊|论文代写|作业代写|买答案|篡改成绩|改成绩|走后门|贿赂|毒品|管制刀具|爆炸物|伤人|杀人)/.test(normalized);
   if(!harmfulAction||!harmfulTopic) return null;
   const safety=guideItems.find(item=>item.id==='anti-fraud');
   return {html:'这个请求涉及违法、伤害他人、欺骗或规避校园安全管理，我不能提供做法、步骤或帮助。可以换成合法方向来问，例如如何防骗、保护账号、补交真实材料、申诉处理，或联系辅导员、保卫部门和警方解决。<em>遇到正在发生的人身危险或财产损失，请立即报警并联系学校保卫部门。</em>',hits:safety?[{item:safety,score:100}]:[]};
 }
 function studentLoanDirectAnswer(question) {
   const normalized=ragNormalize(question);
-  const loanTerms=['贷款','助贷','国家助贷','国助贷','学生贷款','生源地助学','校园地助学','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','缓交学费','贷款扣学费','贷款抵学费'];
+  const loanTerms=['贷款','借贷','借款','助贷','国家助贷','国助贷','学生贷款','生源地助学','校园地助学','国开行贷款','开行贷款','首贷','续贷','共同借款人','贷款合同','贷款申请','贷款额度','贷款到账','贷款回执','电子回执','回执单','回执码','受理证明','贷款证明','交不起学费','没钱交学费','缓交学费','贷款扣学费','贷款抵学费'];
   if(!loanTerms.some(term=>normalized.includes(ragNormalize(term)))) return null;
   const item=guideItems.find(entry=>entry.id==='student-loan-guide');
   if(!item) return null;
+  if(/(诈骗|骗局|骗术|高息|校园贷|是否安全|风险)/.test(normalized)) {
+    const safety=guideItems.find(entry=>entry.id==='anti-fraud');
+    return {html:'识别助学贷款诈骗，先看渠道和付款要求：<ul><li>只通过当地学生资助中心、国家开发银行相关系统、学校资助部门或正式合作银行办理，并向辅导员核验。</li><li>正规助学贷款不会私聊索要“激活费、保证金、刷流水费”，也不要提供银行卡密码、短信验证码或开启屏幕共享。</li><li>遇到高息“校园贷”、陌生链接或冒充老师催款，立即停止操作；已经转账或泄露信息时保存证据，联系银行、辅导员并报警。</li></ul>',hits:[{item,score:100},...(safety?[{item:safety,score:90}]:[])]};
+  }
   const points=[];
   if(/(回执|受理证明|证明)/.test(normalized)) points.push('办理生源地贷款后，请保存受理证明、回执或回执码，并按学校通知交由辅导员或资助部门确认。');
   if(/(学费|缴费|不交|缓交|抵扣|扣学费|到账)/.test(normalized)) points.push('贷款额度覆盖的学费一般不要重复缴纳；是否暂缓缴费、到账后如何抵扣及差额如何补交，以学校财务规则和辅导员通知为准。');
   if(/(首贷|续贷|申请|怎么办|怎么弄|流程|共同借款人)/.test(normalized)) points.push('生源地贷款通常在户籍所在地按当地承办机构要求申请；首贷、续贷和共同借款人材料可能不同，请以当地资助中心和当年政策为准。');
   if(!points.length) points.push('国家助学贷款主要用于学费和住宿费，常见类型为生源地信用助学贷款和校园地国家助学贷款，同一学年不能同时申请两种。', '已办理生源地贷款的同学要保存受理证明或回执，到校后按通知完成学校确认。');
-  return {html:`<ul>${points.map(point=>`<li>${escapeHtml(point)}</li>`).join('')}</ul><em>额度、银行、申请时间和结算方式以当年通知为准；拿不准时直接问辅导员。</em>`,hits:[{item,score:100}]};
+  const broadAidIntent=/(借贷|借款|交不起学费|没钱交学费|经济困难|家庭困难|怎么办)/.test(normalized)&&!/(回执|首贷|续贷|共同借款人|额度|到账)/.test(normalized);
+  const aidItem=guideItems.find(entry=>entry.id==='scholarships-grants-guide'); const hardshipItem=guideItems.find(entry=>entry.id==='financial-hardship-identification');
+  if(broadAidIntent) points.push('如果家庭经济困难，还可以先在智慧学工完成困难生认定，再按学院通知申请国家助学金；入学缴费暂时有困难时同步咨询辅导员和绿色通道。不要使用高息“校园贷”或向陌生人提供身份证、银行卡和验证码。');
+  const hits=[item,...(broadAidIntent&&aidItem?[aidItem]:[]),...(broadAidIntent&&hardshipItem?[hardshipItem]:[])];
+  return {html:`<ul>${points.map(point=>`<li>${escapeHtml(point)}</li>`).join('')}</ul><em>额度、银行、申请时间和结算方式以当年通知为准；拿不准时直接问辅导员。</em>`,hits:hits.map(entry=>({item:entry,score:100}))};
 }
 function studyServicesDirectAnswer(question) {
   const normalized=ragNormalize(question);
@@ -493,19 +502,27 @@ function renderPopularQuestions() { try { const stats=JSON.parse(localStorage.ge
 function htmlToPlainText(html) {
   const node=document.createElement('div'); node.innerHTML=html; return (node.textContent||'').replace(/\s+/g,' ').trim();
 }
+function buildAiKnowledge(question, localResult) {
+  const seen=new Set(); const evidence=retrieve(question).filter(chunk=>{const key=`${chunk.item.id}:${chunk.text}`;if(seen.has(key))return false;seen.add(key);return true;}).slice(0,8).map(chunk=>`【${chunk.item.title}·${chunk.type}】${chunk.text}`);
+  return [`【本地直接回答】${htmlToPlainText(localResult.html)}`,...evidence].join('\n');
+}
 async function requestAiAnswer(question, localResult) {
+  const nextAt=Number(localStorage.getItem('heu-ai-next-question')||0); const remaining=Math.ceil((nextAt-Date.now())/1000);
+  if(remaining>0){const error=new Error('AI cooldown');error.retryAfter=remaining;throw error;}
   const controller=new AbortController(); const timeout=setTimeout(()=>controller.abort(),15000);
   try {
-    const response=await fetch('./api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,localKnowledge:htmlToPlainText(localResult.html)}),signal:controller.signal});
+    const response=await fetch('./api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,localKnowledge:buildAiKnowledge(question,localResult)}),signal:controller.signal});
+    if(response.status===429){const data=await response.json().catch(()=>({}));const error=new Error('AI cooldown');error.retryAfter=data.retryAfter||180;throw error;}
     if(!response.ok) throw new Error(`AI request failed: ${response.status}`);
     const data=await response.json(); if(!data.answer) throw new Error('AI returned an empty answer');
+    localStorage.setItem('heu-ai-next-question',String(Date.now()+180000));
     return escapeHtml(data.answer).replace(/\n/g,'<br>');
   } finally { clearTimeout(timeout); }
 }
 async function submitQuestion(q) {
   if(!q.trim()) return; saveQuestionStat(q); renderPopularQuestions(); const box=document.querySelector('#messages'); box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${escapeHtml(q)}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
   const res=answer(q); let responseHtml=res.html;
-  try { responseHtml=await requestAiAnswer(q,res); } catch (_) { /* GitHub Pages and API failures use the local knowledge answer. */ }
+  try { responseHtml=await requestAiAnswer(q,res); } catch (error) { if(error.retryAfter) responseHtml+=`<em>智能增强正在冷却，约 ${Math.ceil(error.retryAfter/60)} 分钟后刷新可再次调用；当前内容由本地知识库直接回答。</em>`; }
   document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;
 }
 renderGuides();
