@@ -4,10 +4,6 @@ const root = document.querySelector('#guide-page-app');
 const params = new URLSearchParams(location.search);
 const item = guideItems.find(guide => guide.id === params.get('id'));
 
-function compatibleOfficialUrl(url = '') {
-  return url.replace(/^https:\/\/(ugs|youth|zsb)\.hrbeu\.edu\.cn/i, 'http://$1.hrbeu.edu.cn');
-}
-
 function mediaHtml(media = []) {
   if (!media.length) return '';
   return `<section class="detail-gallery"><div class="detail-section-heading"><div><small>IMAGE REFERENCE</small><h2>相关图片</h2></div><p>点击图片查看清晰原图</p></div><div class="detail-media ${media.length === 1 ? 'single' : ''}">${media.map((entry,index) => `<figure><a href="${entry.src}" target="_blank" rel="noopener"><img src="${entry.src}" alt="${entry.alt}" loading="lazy"><span>查看原图 ↗</span></a><figcaption><b>${String(index+1).padStart(2,'0')}</b>${entry.caption}</figcaption></figure>`).join('')}</div></section>`;
@@ -31,7 +27,7 @@ if (!item) {
         ${mediaHtml(item.media)}
         ${item.download ? `<a class="detail-download" href="${item.download.href}" download><span>↓</span><div><b>${item.download.label}</b><small>${item.download.size}</small></div><i>下载文件</i></a>` : ''}
         <section class="detail-content"><h2>完整说明</h2><ol>${item.content.map((paragraph, index) => `<li><span>${String(index + 1).padStart(2, '0')}</span><p>${paragraph}</p></li>`).join('')}</ol></section>
-        <section class="detail-source"><div><small>参考来源</small><b>${item.source}</b></div>${item.sourceUrl ? `<a href="${compatibleOfficialUrl(item.sourceUrl)}">访问来源 →</a>` : ''}</section>
+        <section class="detail-source"><div><small>参考来源</small><b>${item.source}</b></div>${item.sourceUrl ? `<a href="${item.sourceUrl}" target="_blank" rel="noopener">访问来源 →</a>` : ''}</section>
       </article>
       <aside class="detail-aside"><div><small>信息状态</small><strong>${item.verified}</strong><p>涉及费用、账号、开放时间和管理规定时，请再核对学校最新通知。</p></div>${related.length ? `<div><small>同类指南</small>${related.map(entry => `<a href="./guide.html?id=${entry.id}"><b>${entry.title}</b><span>查看全文 →</span></a>`).join('')}</div>` : ''}<a class="ask-side" href="./index.html#ask">还有疑问？<b>问启航助手 →</b></a></aside>
     </main>

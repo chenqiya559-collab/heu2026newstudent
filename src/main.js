@@ -91,7 +91,7 @@ app.innerHTML = `
       </div>
     </section>
 
-    <section class="sources section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow"><i></i> OFFICIAL CHANNELS</div><h2>认准官方信息入口</h2><p>点击后在当前页面进入学校网站；部分校内子站加载较慢，请耐心等待。</p></div></div><div class="source-grid">${officialLinks.map((l,i)=>`<a href="${l.url}" title="进入${l.name}"><span>0${i+1}</span><div><b>${l.name}</b><small>${l.desc}</small><em>${l.url.replace(/^https?:\/\//,'')}</em></div><i>→</i></a>`).join('')}</div></div></section>
+    <section class="sources section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow"><i></i> OFFICIAL CHANNELS</div><h2>认准官方信息入口</h2><p>官方网站将在新标签页打开；部分校内子站加载较慢，请耐心等待。</p></div></div><div class="source-grid">${officialLinks.map((l,i)=>`<a href="${l.url}" target="_blank" rel="noopener" title="进入${l.name}"><span>0${i+1}</span><div><b>${l.name}</b><small>${l.desc}</small><em>${l.url.replace(/^https?:\/\//,'')}</em></div><i>→</i></a>`).join('')}</div></div></section>
   </main>
   <footer><div class="shell"><div class="brand inverse"><span class="brand-mark">H</span><span>启航 HEU<small>2026 新生入学指南</small></span></div><p>学生团队整理 · 非学校官方网站<br>信息有误？欢迎帮助我们一起完善。</p><button id="feedback">提交纠错 / 使用反馈 ↗</button></div><div class="footline shell"><span>学生团队整理</span><span>愿你在这里，找到自己的航向。</span></div></footer>
   <dialog id="detail-dialog"><button class="dialog-close">×</button><div id="dialog-body"></div></dialog>
@@ -126,6 +126,12 @@ function openMap(id) {
   document.querySelector('#map-dialog-image').alt = item.title;
   document.querySelector('#map-original').href = item.image;
   document.querySelector('#map-dialog').showModal();
+}
+
+function chatMapReferences(mapIds = []) {
+  const maps=mapIds.map(id=>mapResources.find(map=>map.id===id)).filter(Boolean);
+  if(!maps.length) return '';
+  return `<div class="chat-map-refs">${maps.map(map=>`<button type="button" data-map-open="${map.id}" title="查看${map.title}"><img src="${map.image}" alt="${map.title}"><span><b>${map.title}</b><small>点击放大查看</small></span></button>`).join('')}</div>`;
 }
 
 function openGuide(id) {
@@ -335,6 +341,27 @@ function otherSchoolFallback(question) {
   if(!/(哈工大|哈尔滨工业大学)/.test(question)) return null;
   return {html:'这里是面向哈尔滨工程大学新生的助手，无法可靠回答哈尔滨工业大学的校情问题。建议查看对方学校官网或官方招生渠道，避免把两所学校的信息混在一起。',hits:[]};
 }
+function mapLocationAnswer(question) {
+  const normalized=ragNormalize(question);
+  const asksRoute=/(怎么去|怎么走|怎么到|怎么坐|如何去|如何到|怎样到|到达|乘坐|路线|导航|从.+到)/.test(normalized);
+  const asksLocation=/(在哪里|在哪儿|在哪|位置|哪个方向|怎么找)/.test(normalized);
+  const asksMapInfo=/(校园地图|地图).*(信息|有什么|能看|识别|怎么看|查看)/.test(normalized);
+  if(!asksRoute&&!asksLocation&&!asksMapInfo) return null;
+  const places=[['大美','大美食堂'],['小美','小美食堂'],['至美','至美餐厅'],['天美','至美餐厅'],['快乐食间','快乐食间'],['启航','启航活动中心'],['北体育场','北体育场'],['北体','北体育场'],['21b','21B'],['11号楼','11 号教学楼'],['图书馆','图书馆'],['校医院','校医院'],['主楼','主楼'],['动力楼','动力楼'],['水声楼','水声楼'],['东门','东门'],['北门','北门'],['南门','南门'],['公寓','公寓区'],['宿舍','公寓区'],['食堂','食堂'],['教学楼','教学楼'],['体育馆','体育馆'],['快递站','快递站'],['驿站','快递驿站']];
+  const place=places.find(([term])=>normalized.includes(term))?.[1];
+  const asksBus=/(小公交|校车|校园公交|校园巴士|摆渡车|接驳车)/.test(normalized);
+  if(!place&&!asksBus&&!asksMapInfo) return null;
+  const app=guideItems.find(item=>item.id==='heu-mobile-campus');
+  const shuttle=guideItems.find(item=>item.id==='campus-shuttle-guide');
+  if(asksBus) return {html:'校园小公交只在校内往返，不会驶出校门；校内学生参考票价 1 元/人，校外人士 2 元/人。先在路线图确认车辆方向和目的站，再结合车辆标识或询问司机；班次和站点以现场为准。',hits:shuttle?[{item:shuttle,score:100}]:[],maps:['bus-route','campus-map']};
+  if(asksMapInfo) return {html:'校园平面图可查看教学楼、公寓、食堂、校门和道路的相对位置；手绘全景图适合按建筑与道路辨别方向。需要实时确认当前位置时，可使用 HEU 移动校园 App 内地图；定位仍不清楚时询问在校生或现场工作人员。',hits:app?[{item:app,score:100}]:[],maps:['campus-map','panorama']};
+  const mapIds=['campus-map'];
+  if(place==='11 号教学楼') mapIds.push('building-11');
+  if(asksRoute) mapIds.push('bus-route');
+  const hits=[...(app?[{item:app,score:100}]:[]),...(asksRoute&&shuttle?[{item:shuttle,score:90}]:[])];
+  const routeNote=asksRoute?'网站暂时没有可靠的逐路口实时路径数据，因此不编造转弯路线。先在校园地图确认起点与目的地；距离较远时可对照小公交路线图，确认方向后乘车。':'可先在校园平面图中确认它与校门、道路和周边建筑的相对位置。';
+  return {html:`关于“${escapeHtml(place)}”：${routeNote}也可以使用 HEU 移动校园 App 内地图识别方向；仍不确定时询问在校生、保安或现场工作人员。`,hits,maps:[...new Set(mapIds)]};
+}
 function guidanceFallback(question) {
   const market=guideItems.find(item=>item.id==='zanou-campus-market'); const sensitive=/(缴费|学费|账号|密码|验证码|政策|处分|录取|学籍|成绩|考试|报到)/.test(question);
   const official=sensitive?'这类事项还涉及正式规则，请同时核对学校官网、迎新系统、学院通知或咨询辅导员。':'如果帖子里的回答不一致，再回到学校官方渠道核验。';
@@ -484,6 +511,7 @@ function answer(question) {
   const unsafeAnswer=unsafeRequestFallback(question); if(unsafeAnswer) return unsafeAnswer;
   const otherSchoolAnswer=otherSchoolFallback(question); if(otherSchoolAnswer) return otherSchoolAnswer;
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
+  const mapAnswer=mapLocationAnswer(question); if(mapAnswer) return mapAnswer;
   const loanAnswer=studentLoanDirectAnswer(question); if(loanAnswer) return loanAnswer;
   const studyServicesAnswer=studyServicesDirectAnswer(question); if(studyServicesAnswer) return studyServicesAnswer;
   const focusedAnswer=focusedKnowledgeAnswer(question); if(focusedAnswer) return focusedAnswer;
@@ -532,7 +560,7 @@ async function submitQuestion(q) {
   const res=answer(q); let responseHtml=res.html;
   if(res.safetyViolation){const state=registerSafetyViolation();if(state.locked)res.hits=[];responseHtml=state.locked?'已连续超过 3 次询问违法或违规内容，本轮对话暂停 3 分钟。冷却结束后可以重新咨询正常的新生问题。':`${responseHtml}<em>不合规提问提醒：${state.strikes}/3。若继续连续询问此类内容，下一次将暂停回答 3 分钟。</em>`;}
   else if(!res.localOnly){resetSafetyStrikes();try { responseHtml=await requestAiAnswer(q,res); } catch (_) { /* AI failures use the local knowledge answer. */ }}
-  document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;
+  document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${chatMapReferences(res.maps)}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.querySelectorAll('[data-map-open]').forEach(button=>button.onclick=()=>openMap(button.dataset.mapOpen)); box.scrollTop=box.scrollHeight;
 }
 renderGuides();
 renderPopularQuestions();
