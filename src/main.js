@@ -18,6 +18,7 @@ const quickQuestions = [
   { label: '购物吃饭', questions: ['校内去哪里买生活用品？', '学校有哪些食堂？', '外卖能送到宿舍楼下吗？'] },
   { label: '出行学习', questions: ['校园小公交怎么坐？', '教材和二手书在哪里买？', '打印和借书去哪里？'] }
 ];
+const assistantGreeting = '新生你好，我是启航网站小助手 abb，你有什么问题可以随时问我 ^_^，无法回答的可以去校园集市询问你们的学哥学姐呀，感谢对我们网站的支持 qbq。';
 
 app.innerHTML = `
   <div class="notice"><span>信息提示</span> 本站为学生团队整理，具体安排请以学校、学院 2026 年官方通知为准。</div>
@@ -85,15 +86,10 @@ app.innerHTML = `
       <div class="ask-copy"><div class="eyebrow"><i></i> GROUNDED ANSWERS</div><h2>有问题，问启航助手</h2><p>从高频主题里直接找，也可以输入自己的问题。回答会附对应帖子，涉及政策和费用时仍需核对学校通知。</p><div class="question-index">${quickQuestions.map((group,index)=>`<section class="question-group"><div><span>0${index+1}</span><b>${group.label}</b></div>${group.questions.map(question=>`<button type="button" data-quick-question="${question}">${question}<span>→</span></button>`).join('')}</section>`).join('')}</div><div class="popular-box"><b>本机高频提问</b><span id="popular-questions">提问后会在本机匿名汇总，帮助后续补充知识库</span></div></div>
       <div class="chat-card">
         <div class="chat-head"><div><span class="bot">H</span><b>启航助手</b><small><i></i> 本地 RAG · ${guideItems.length} 篇知识</small></div><button id="clear-chat" title="清空对话">↻</button></div>
-        <div class="messages" id="messages"><div class="message bot-msg"><span class="bot">H</span><div>你好！我是启航助手 👋<br>你可以问我关于报到、选课、培养方案和校园生活的问题。<small>回答会附参考信息，请以最新官方通知为准。</small></div></div></div>
+        <div class="messages" id="messages"><div class="message bot-msg"><span class="bot">H</span><div>${assistantGreeting}</div></div></div>
         <form id="ask-form"><input id="question" autocomplete="off" placeholder="例如：新生报到需要带什么？" /><button type="submit">发送 ↑</button></form>
       </div>
     </section>
-
-    <section class="polish-section section" id="polish"><div class="shell polish-layout">
-      <div class="polish-copy"><div class="eyebrow"><i></i> NOTICE ORGANIZER</div><h2>把碎片通知，整理成可执行的信息</h2><p>粘贴班群公告、楼内通知或学长学姐经验。助手会提取关键事项和待办，保留不确定信息供你回看原文。</p><small>本地处理，不上传文本；涉及日期、费用和管理规定仍请核对原通知。</small></div>
-      <div class="polish-tool"><form id="polish-form"><label for="notice-input">原始内容</label><textarea id="notice-input" required placeholder="例如：18、19公寓浴池下午四点到晚上十一点开，周二不开放。使用校园卡，具体以公告为准。"></textarea><button class="primary" type="submit">整理通知 <span>→</span></button></form><section id="polish-result" class="polish-result" hidden aria-live="polite"></section></div>
-    </div></section>
 
     <section class="sources section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow"><i></i> OFFICIAL CHANNELS</div><h2>认准官方信息入口</h2><p>点击后在当前页面进入学校网站；部分校内子站加载较慢，请耐心等待。</p></div></div><div class="source-grid">${officialLinks.map((l,i)=>`<a href="${l.url}" title="进入${l.name}"><span>0${i+1}</span><div><b>${l.name}</b><small>${l.desc}</small><em>${l.url.replace(/^https?:\/\//,'')}</em></div><i>→</i></a>`).join('')}</div></div></section>
   </main>
@@ -147,7 +143,6 @@ document.querySelector('#map-search-clear').addEventListener('click', () => { co
 document.querySelectorAll('.map-suggestions button').forEach(button => button.addEventListener('click', () => { const input=document.querySelector('#map-query'); input.value=button.textContent; renderMaps(button.textContent); }));
 document.querySelector('#feedback').addEventListener('click',()=>document.querySelector('#feedback-dialog').showModal());
 document.querySelector('#fake-submit').addEventListener('click',()=>{alert('感谢反馈！演示版已记录交互；正式部署请接入真实表单。');document.querySelector('#feedback-dialog').close()});
-document.querySelector('#polish-form').addEventListener('submit', event => { event.preventDefault(); renderPolishedNotice(document.querySelector('#notice-input').value); });
 
 const stopWords = new Set('的了是我你要有吗呢啊什么怎么如何一下可以能不能请问关于需要应该学校新生大学'.split(''));
 function tokens(text) { return [...new Set((text.toLowerCase().match(/[\u4e00-\u9fa5]{1,4}|[a-z0-9]+/g)||[]).flatMap(x=>x.length>2&&/[\u4e00-\u9fa5]/.test(x)?[x,...x.split('')]:[x]).filter(x=>!stopWords.has(x)))]; }
@@ -170,23 +165,10 @@ function legacySubmitQuestion(q) {
 }
 document.querySelector('#ask-form').addEventListener('submit',e=>{e.preventDefault();const input=document.querySelector('#question');submitQuestion(input.value);input.value=''});
 document.querySelectorAll('[data-quick-question]').forEach(button=>button.addEventListener('click',()=>submitQuestion(button.dataset.quickQuestion)));
-document.querySelector('#clear-chat').addEventListener('click',()=>document.querySelector('#messages').innerHTML='<div class="message bot-msg"><span class="bot">H</span><div>对话已清空。还有什么想了解的？</div></div>');
+document.querySelector('#clear-chat').addEventListener('click',()=>document.querySelector('#messages').innerHTML=`<div class="message bot-msg"><span class="bot">H</span><div>${assistantGreeting}</div></div>`);
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.querySelector('#ask').scrollIntoView({behavior:'smooth'});document.querySelector('#question').focus()}});
 // Local RAG engine: chunk -> retrieve -> grounded answer.
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-function polishNotice(text) {
-  const cleaned=String(text||'').replace(/\s+/g,' ').trim();
-  const sentences=cleaned.split(/(?<=[。！？；;])/).map(sentence=>sentence.trim()).filter(Boolean);
-  const topic=/(浴池|洗浴|洗澡)/.test(cleaned)?'洗浴安排':/(宿舍|公寓|寝室)/.test(cleaned)?'宿舍通知':/(报到|报道)/.test(cleaned)?'新生报到':/(选课|课表)/.test(cleaned)?'选课提醒':'校园通知';
-  const keyLines=sentences.filter(sentence=>/(时间|点|周.|日期|地点|开放|休息|费用|校园卡|需|请|禁止|安排|通知)/.test(sentence)).slice(0,5);
-  const actions=sentences.filter(sentence=>/(请|需|带|准备|核对|查看|联系|遵守|不要)/.test(sentence)).slice(0,3);
-  return {topic,summary:sentences.slice(0,2).join(' ')||cleaned,keyLines:keyLines.length?keyLines:sentences.slice(0,4),actions};
-}
-function renderPolishedNotice(text) {
-  const result=document.querySelector('#polish-result'); const data=polishNotice(text); const actionHtml=data.actions.length?`<div><small>建议操作</small><ul>${data.actions.map(line=>`<li>${escapeHtml(line)}</li>`).join('')}</ul></div>`:'<div><small>建议操作</small><p>请保留原通知，并核对发布部门、日期和适用范围。</p></div>';
-  result.hidden=false; result.innerHTML=`<div class="polish-result-head"><span>整理结果</span><button type="button" id="copy-polished" title="复制整理结果">复制</button></div><h3>${escapeHtml(data.topic)}</h3><p>${escapeHtml(data.summary)}</p><div class="polish-points"><div><small>关键信息</small><ul>${data.keyLines.map(line=>`<li>${escapeHtml(line)}</li>`).join('')}</ul></div>${actionHtml}</div><em>自动整理不替代原始通知；有日期、费用或管理规则时请回看来源。</em>`;
-  document.querySelector('#copy-polished').addEventListener('click', async () => { const copyText=`${data.topic}\n${data.summary}\n关键信息：\n${data.keyLines.map(line=>`- ${line}`).join('\n')}\n建议操作：\n${data.actions.map(line=>`- ${line}`).join('\n')}`; try { await navigator.clipboard.writeText(copyText); document.querySelector('#copy-polished').textContent='已复制'; } catch (_) { document.querySelector('#copy-polished').textContent='请手动复制'; } });
-}
 const ragStopWords = new Set(['的','了','是','我','你','要','有','吗','呢','啊','什么','怎么','如何','一下','可以','能不能','请问','关于','需要','应该','学校','新生','大学','帮我','问题','完全','没有','收录','一下','一下子','的话','是不是','有没有','了解','知道','告诉','想问','请教','哈工程','哈尔滨工程大学','heu']);
 const ragSynonymGroups = [
   ['报到','报道','到校','入学','现场报到','迎新'], ['材料','证件','通知书','档案','团关系','党关系','照片','绿色通道'],
@@ -483,7 +465,15 @@ function selectDetailedEvidence(chunks, question) {
   });
   return selected;
 }
+function greetingAnswer(question) {
+  const normalized=ragNormalize(question);
+  const isGreeting=/^(你好|您好|嗨|哈喽|hello|hi|在吗|早上好|下午好|晚上好)+$/i.test(normalized);
+  const asksIdentity=normalized.length<=20&&/(你是谁|你叫什么|叫什么名字|介绍一下自己|小助手叫什么)/i.test(normalized);
+  if(!isGreeting&&!asksIdentity) return null;
+  return {html:escapeHtml(assistantGreeting),hits:[],localOnly:true};
+}
 function answer(question) {
+  const greeting=greetingAnswer(question); if(greeting) return greeting;
   const unsafeAnswer=unsafeRequestFallback(question); if(unsafeAnswer) return unsafeAnswer;
   const otherSchoolAnswer=otherSchoolFallback(question); if(otherSchoolAnswer) return otherSchoolAnswer;
   const schoolAnswer=schoolFactAnswer(question); if(schoolAnswer) return schoolAnswer;
@@ -522,7 +512,7 @@ async function requestAiAnswer(question, localResult) {
 async function submitQuestion(q) {
   if(!q.trim()) return; saveQuestionStat(q); renderPopularQuestions(); const box=document.querySelector('#messages'); box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${escapeHtml(q)}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
   const res=answer(q); let responseHtml=res.html;
-  try { responseHtml=await requestAiAnswer(q,res); } catch (error) { if(error.retryAfter) responseHtml+=`<em>智能增强正在冷却，约 ${Math.ceil(error.retryAfter/60)} 分钟后刷新可再次调用；当前内容由本地知识库直接回答。</em>`; }
+  if(!res.localOnly) try { responseHtml=await requestAiAnswer(q,res); } catch (error) { if(error.retryAfter) responseHtml+=`<em>智能增强正在冷却，约 ${Math.ceil(error.retryAfter/60)} 分钟后刷新可再次调用；当前内容由本地知识库直接回答。</em>`; }
   document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.scrollTop=box.scrollHeight;
 }
 renderGuides();
