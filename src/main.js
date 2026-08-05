@@ -134,6 +134,11 @@ function chatMapReferences(mapIds = []) {
   return `<div class="chat-map-refs">${maps.map(map=>`<button type="button" data-map-open="${map.id}" title="查看${map.title}"><img src="${map.image}" alt="${map.title}"><span><b>${map.title}</b><small>点击放大查看</small></span></button>`).join('')}</div>`;
 }
 
+function chatReferences(hits = []) {
+  if(!hits.length) return '';
+  return `<div class="refs"><small>信息来源 · 点击进入对应帖子</small>${hits.map((hit,index)=>`<a href="./guide.html?id=${encodeURIComponent(hit.item.id)}" title="打开帖子：${escapeHtml(hit.item.title)}"><span>[${index+1}]</span><b>${escapeHtml(hit.item.title)}</b><i>进入帖子 →</i></a>`).join('')}</div>`;
+}
+
 function openGuide(id) {
   window.location.href = `./guide.html?id=${encodeURIComponent(id)}`;
 }
@@ -167,7 +172,7 @@ function legacyAnswer(question) {
 function legacySubmitQuestion(q) {
   if(!q.trim()) return; const box=document.querySelector('#messages');
   box.insertAdjacentHTML('beforeend',`<div class="message user-msg"><div>${q.replace(/[<>]/g,'')}</div></div><div class="typing"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
-  setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=legacyAnswer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${res.hits.length?`<div class="refs"><small>参考条目</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openGuide(b.dataset.open));box.scrollTop=box.scrollHeight;},550);
+  setTimeout(()=>{document.querySelector('.typing')?.remove(); const res=legacyAnswer(q); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${res.html}${chatReferences(res.hits)}</div></div>`);box.scrollTop=box.scrollHeight;},550);
 }
 document.querySelector('#ask-form').addEventListener('submit',e=>{e.preventDefault();const input=document.querySelector('#question');submitQuestion(input.value);input.value=''});
 document.querySelectorAll('[data-quick-question]').forEach(button=>button.addEventListener('click',()=>submitQuestion(button.dataset.quickQuestion)));
@@ -577,7 +582,7 @@ async function submitQuestion(q) {
   const res=answer(q); let responseHtml=res.html;
   if(res.safetyViolation){const state=registerSafetyViolation();if(state.locked)res.hits=[];responseHtml=state.locked?'已连续超过 3 次询问违法或违规内容，本轮对话暂停 3 分钟。冷却结束后可以重新咨询正常的新生问题。':`${responseHtml}<em>不合规提问提醒：${state.strikes}/3。若继续连续询问此类内容，下一次将暂停回答 3 分钟。</em>`;}
   else if(!res.localOnly){resetSafetyStrikes();try { responseHtml=await requestAiAnswer(q,res); } catch (_) { /* AI failures use the local knowledge answer. */ }}
-  document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${chatMapReferences(res.maps)}${res.hits.length?`<div class="refs"><small>参考条目 · 可打开全文</small>${res.hits.map((h,i)=>`<button data-open="${h.item.id}">[${i+1}] ${h.item.title}</button>`).join('')}</div>`:''}</div></div>`); box.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openGuide(button.dataset.open)); box.querySelectorAll('[data-map-open]').forEach(button=>button.onclick=()=>openMap(button.dataset.mapOpen)); box.scrollTop=box.scrollHeight;
+  document.querySelector('.typing')?.remove(); box.insertAdjacentHTML('beforeend',`<div class="message bot-msg"><span class="bot">H</span><div>${responseHtml}${chatMapReferences(res.maps)}${chatReferences(res.hits)}</div></div>`); box.querySelectorAll('[data-map-open]').forEach(button=>button.onclick=()=>openMap(button.dataset.mapOpen)); box.scrollTop=box.scrollHeight;
 }
 renderGuides();
 renderPopularQuestions();
