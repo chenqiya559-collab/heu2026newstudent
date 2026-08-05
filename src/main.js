@@ -516,7 +516,7 @@ async function requestAiAnswer(question, localResult) {
     if(!response.ok) throw new Error(`AI request failed: ${response.status}`);
     const data=await response.json(); if(!data.answer) throw new Error('AI returned an empty answer');
     localStorage.setItem('heu-ai-next-question',String(Date.now()+180000));
-    return escapeHtml(data.answer).replace(/\n/g,'<br>');
+    return escapeHtml(data.answer).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
   } finally { clearTimeout(timeout); }
 }
 async function submitQuestion(q) {
